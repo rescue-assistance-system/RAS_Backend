@@ -1,0 +1,15 @@
+import allowedOrigins from './allowed-origins.js';
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) { //!origin is for Postman & mobile app
+            callback(null, true)
+        } else {
+            //callback(new Error('Not allowed by CORS'));
+            callback(null, true)
+        }
+    },
+    optionsSuccessStatus: 200
+}
+
+export default corsOptions;

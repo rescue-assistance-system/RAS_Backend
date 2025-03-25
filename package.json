@@ -1,0 +1,31 @@
+{
+  "name": "liveboat-backend-boilerplate",
+  "version": "1.0.0",
+  "description": "boilerplate for the Liveboat project",
+  "license": "ISC",
+  "author": "tungthegoat",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon app/server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
+    "mysql2": "^3.13.0",
+    "path": "^0.12.7",
+    "sequelize": "^6.37.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prettier": "3.5.3"
+  }
+}
