@@ -1,10 +1,6 @@
 {
-    "name": "ras-backend",
+    "name": "ras_backend",
     "version": "1.0.0",
-    "description": "backend for the Ras project",
-    "license": "ISC",
-    "author": "dilys",
-    "type": "module",
     "main": "server.js",
     "scripts": {
         "dev": "cross-env NODE_ENV=development npx nodemon src/server.ts",
@@ -19,6 +15,9 @@
         "check": "npm run lint && npm run prettier"
     },
     "keywords": [],
+    "author": "dilys",
+    "license": "ISC",
+    "description": "RAS Backend - Rescue Assistance System Backend",
     "dependencies": {
         "@types/amqplib": "^0.10.6",
         "@types/bcryptjs": "^2.4.6",
