@@ -1,31 +1,25 @@
 import { Sequelize } from 'sequelize'
 import dbConfig from '../configs/database'
 
-class Database {
-    private static instance: Sequelize
-
-    private constructor() {}
-
-    /**
-     * Get the singleton instance of the Sequelize database connection.
-     * @returns The Sequelize instance
-     */
-    public static getInstance(): Sequelize {
-        if (!Database.instance) {
-            Database.instance = new Sequelize(dbConfig.database, dbConfig.user, dbConfig.password, {
-                host: dbConfig.host,
-                port: dbConfig.port,
-                dialect: 'postgres',
-                logging: console.log
-            })
-
-            Database.instance
-                .sync({ alter: true })
-                .then(() => console.log('✅ Database & tables synced successfully'))
-                .catch((err) => console.error('❌ Database sync error:', err))
-        }
-        return Database.instance
+const sequelize = new Sequelize(dbConfig.database, dbConfig.user, dbConfig.password, {
+    host: dbConfig.host,
+    port: dbConfig.port,
+    dialect: 'postgres',
+    logging: false,
+    define: {
+        timestamps: true,
+        underscored: true
     }
-}
+})
 
-export default Database
+// Test the connection and force sync tables
+sequelize
+    .authenticate()
+    .then(() => {
+        console.log('✅ Database connection established successfully.')
+        return sequelize.sync({ alter: true }) // This will drop and recreate all tables
+    })
+    .then(() => console.log('✅ Database & tables synced successfully'))
+    .catch((err) => console.error('❌ Database error:', err))
+
+export default sequelize
