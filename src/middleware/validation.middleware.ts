@@ -14,7 +14,7 @@ export const validateRegister = [
     body('email').isEmail().withMessage('Invalid email format'),
     // body('phone').notEmpty().withMessage('Phone number is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('device_id').notEmpty().withMessage('Device ID is required'),
+    // body('device_id').notEmpty().withMessage('Device ID is required'),
     validateRequest
 ]
 

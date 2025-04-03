@@ -47,10 +47,6 @@ const authController = new AuthController()
  *                 type: string
  *                 description: Password of the user
  *                 example: password123
- *               device_id:
- *                 type: string
- *                 description: Device ID of the user
- *                 example: abc1
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -65,15 +61,12 @@ const authController = new AuthController()
  *                 data:
  *                   type: object
  *                   properties:
- *                     username:
+ *                     message:
  *                       type: string
- *                       example: Nguyen Thi Lien Hoa
- *                     email:
- *                       type: string
- *                       example: user1@example.com
- *                     device_id:
- *                       type: string
- *                       example: abc1
+ *                       example: OTP sent for registration
+ *                     otp_expires_in:
+ *                       type: number
+ *                       example: 300
  *                 error:
  *                   type: string
  *                   example: null
@@ -93,7 +86,8 @@ const authController = new AuthController()
  *                 error:
  *                   type: string
  *                   example: User with this email already exists
- */router.post('/register', validateRegister, authController.register)
+ */ 
+router.post('/register', validateRegister, authController.register)
 
 /**
  * @swagger
@@ -132,7 +126,7 @@ const authController = new AuthController()
  *                   properties:
  *                     message:
  *                       type: string
- *                       example: OTP verified successfully
+ *                       example: Account created successfully. Please log in to continue.
  *                 error:
  *                   type: string
  *                   example: null

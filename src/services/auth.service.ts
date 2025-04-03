@@ -12,7 +12,7 @@ import {
 } from '../configs/email.config'
 
 export class AuthService {
-    async register(userData: { username: string;  email: string; password: string; device_id: string }) {
+    async register(userData: { username: string;  email: string; password: string }) {
         const existingUser = await User.findOne({
             where: {
                 [Op.or]: [{ email: userData.email }]
@@ -69,20 +69,8 @@ export class AuthService {
             redisClient.del(tempUserKey)
             clearOTP(email)
 
-            const tokens = {
-                access_token: generateAccessToken({
-                    user_id: user.dataValues.id,
-                    device_id: user.dataValues.device_id
-                }),
-                refresh_token: generateRefreshToken({
-                    user_id: user.dataValues.id,
-                    device_id: user.dataValues.device_id
-                })
-            }
-
             return {
-                message: 'Account verified successfully',
-                ...tokens
+                message: 'Account verified successfully'
             }
         } catch (error) {
             console.error('Error in verifyOTP:', error)
@@ -91,36 +79,44 @@ export class AuthService {
     }
 
     async login(email: string, password: string, device_id: string) {
+        // Tìm tài khoản theo email
         const user = await User.findOne({
             where: { email }
-        })
-
+        });
+    
         if (!user) {
-            throw new Error('User not found')
+            throw new Error('User not found');
         }
-
-        const isValidPassword = await bcrypt.compare(password, user.password)
-        console.log('Password comparison result:', isValidPassword)
-        console.log('password', password)
-        console.log('user.password', user.password)
-        if (!isValidPassword) {
-            throw new Error('Invalid password')
+    
+        // Kiểm tra mật khẩu
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new Error('Invalid credentials');
         }
-
-        if (user.device_id !== device_id) {
-            return {
-                message: 'You are logging in from a different device. Do you want to switch to this device?',
-                requires_otp: true
-            }
+    
+        // Kiểm tra xem tài khoản đã được liên kết với một thiết bị khác chưa
+        if (user.device_id && user.device_id !== device_id) {
+            throw new Error('This account is already linked to another device. Please log out from the other device first.');
         }
-
-        return {
-            message: 'Login successful',
-            access_token: generateAccessToken({ user_id: user.dataValues.id, device_id: user.dataValues.device_id }),
-            refresh_token: generateRefreshToken({ user_id: user.dataValues.id, device_id: user.dataValues.device_id })
-        }
+    
+        // Liên kết device_id với tài khoản
+        user.device_id = device_id;
+        await user.save();
+    
+        // Tạo token
+        const tokens = {
+            access_token: generateAccessToken({
+                user_id: user.id,
+                device_id: user.device_id
+            }),
+            refresh_token: generateRefreshToken({
+                user_id: user.id,
+                device_id: user.device_id
+            })
+        };
+    
+        return tokens;
     }
-
     async requestOTP(email: string, device_id: string) {
         const user = await User.findOne({
             where: { email }
