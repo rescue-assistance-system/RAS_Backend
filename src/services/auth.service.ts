@@ -79,7 +79,6 @@ export class AuthService {
     }
 
     async login(email: string, password: string, device_id: string) {
-        // Tìm tài khoản theo email
         const user = await User.findOne({
             where: { email }
         })
@@ -88,7 +87,6 @@ export class AuthService {
             throw new Error('User not found')
         }
 
-        // Kiểm tra mật khẩu
         const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) {
             throw new Error('Password does not match')
@@ -246,12 +244,9 @@ export class AuthService {
             throw new Error('User not found')
         }
 
-        // Hash mật khẩu mới
         const hashedPassword = await bcrypt.hash(new_password, 10)
         user.password = hashedPassword
         await user.save()
-
-        // Xóa OTP sau khi sử dụng
         clearOTP(email)
 
         return {
