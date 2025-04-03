@@ -12,10 +12,10 @@ import {
 } from '../configs/email.config'
 
 export class AuthService {
-    async register(userData: { username: string; phone: string; email: string; password: string; device_id: string }) {
+    async register(userData: { username: string;  email: string; password: string; device_id: string }) {
         const existingUser = await User.findOne({
             where: {
-                [Op.or]: [{ email: userData.email }, { phone: userData.phone }]
+                [Op.or]: [{ email: userData.email }]
             }
         })
 
@@ -43,8 +43,8 @@ export class AuthService {
         }
         storeOTP(userData.email, otp)
         return {
-            message: 'OTP sent to your email',
-            otp_expires_in: getOTPExpiry()
+            ...userData,
+            password: hashedPassword
         }
     }
 
@@ -205,23 +205,32 @@ export class AuthService {
             throw error
         }
     }
-    async forgotPassword(email: string) {
+    async forgotPassword(email: string, device_id: string) {
         const user = await User.findOne({
             where: { email }
         })
-
+    
         if (!user) {
             throw new Error('User not found')
         }
+        console.log('user.device_id', user.device_id)
+        console.log('device_id', device_id);
+        // Kiểm tra device_id
+        if (user.device_id !== device_id) {
+            throw new Error('Device ID mismatch. Please use the registered device.')
+        }
+    
         const otp = generateOTP()
         const htmlContent = generateOTPForgotPassword(otp)
-        const emailSent = await sendEmail(email, 'Your OTP Code for RAS forgot Password', htmlContent)
+        const emailSent = await sendEmail(email, 'Your OTP Code for RAS Forgot Password', htmlContent)
+    
         if (!emailSent) {
-            throw new Error('Failed to send registration OTP email')
+            throw new Error('Failed to send OTP email')
         }
+    
         storeOTP(email, otp)
         console.log(`OTP for ${email}: ${otp}`)
-
+    
         return {
             message: 'OTP sent for password reset',
             otp_expires_in: getOTPExpiry()
@@ -229,25 +238,28 @@ export class AuthService {
     }
 
     async resetPassword(email: string, otp: string, new_password: string) {
-        const isValid = verifyOTP(email, otp)
+        // Kiểm tra OTP
+        const isValid = await verifyOTP(email, otp)
         if (!isValid) {
             throw new Error('Invalid or expired OTP')
         }
-
+    
         const user = await User.findOne({
             where: { email }
         })
-
+    
         if (!user) {
             throw new Error('User not found')
         }
-
+    
+        // Hash mật khẩu mới
         const hashedPassword = await bcrypt.hash(new_password, 10)
         user.password = hashedPassword
         await user.save()
-
+    
+        // Xóa OTP sau khi sử dụng
         clearOTP(email)
-
+    
         return {
             message: 'Password reset successfully'
         }

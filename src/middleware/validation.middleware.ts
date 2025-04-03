@@ -12,7 +12,7 @@ const validateRequest = (req: Request, res: Response, next: NextFunction) => {
 export const validateRegister = [
     body('username').notEmpty().withMessage('Username is required'),
     body('email').isEmail().withMessage('Invalid email format'),
-    body('phone').notEmpty().withMessage('Phone number is required'),
+    // body('phone').notEmpty().withMessage('Phone number is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('device_id').notEmpty().withMessage('Device ID is required'),
     validateRequest

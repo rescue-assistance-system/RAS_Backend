@@ -33,7 +33,7 @@ User.init(
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
             unique: true
         },
         email: {

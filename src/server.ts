@@ -1,6 +1,6 @@
 import express, { Express } from 'express'
 import { Server } from 'http'
-import userRouter from './routes/auth.routes'
+import userRouter from './routes/auth.routes.swagger'
 import { errorConverter, errorHandler } from './middleware'
 import sequelize from './database/connection'
 import config from './configs/config'
@@ -8,6 +8,8 @@ import morgan from 'morgan'
 import helmet from 'helmet'
 import compression from 'compression'
 import redisClient from './configs/redis.config'
+import swaggerUi from 'swagger-ui-express'
+import swaggerSpec from './configs/swagger.config'
 
 const app: Express = express()
 
@@ -17,6 +19,8 @@ app.use(morgan('dev'))
 app.use(helmet())
 app.use(compression())
 app.use(express.urlencoded({ extended: true }))
+// Swagger UI setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // Route handling: All routes inside `userRouter` will be prefixed with `/api`
 app.use('/api/auth', userRouter)
@@ -30,7 +34,7 @@ redisClient
     .connect()
     .then(() => {
         console.log('Successfully connected to Redis')
-        console.timeEnd('Redis Connection') // Kết thúc đo thời gian
+        console.timeEnd('Redis Connection') 
     })
     .catch((err) => {
         console.error('Failed to connect to Redis:', err)
@@ -40,6 +44,7 @@ redisClient
 // Start the Auth Service server
 const server: Server = app.listen(config.PORT, () => {
     console.log(`🚀 Auth Service is running on port ${config.PORT}`)
+    console.log(`📄 Swagger Docs available at http://localhost:${config.PORT}/api-docs`)
 })
 
 // Graceful shutdown
