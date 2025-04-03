@@ -12,32 +12,55 @@ export class AuthController {
 
     public register = async (req: Request, res: Response) => {
         try {
-            const result = await this.authService.register(req.body)
-            res.status(201).json(createResponse('success', result))
-        } catch (error) {
-            console.error('Error in register:', error)
-            res.status(400).json(createResponse('error', null, error.message))
-        
+            const result = await this.authService.register(req.body);
+            res.status(201).json(createResponse('success', result));
+        } catch (error: any) {
+            console.error('Error in register:', error.message);
+    
+            if (error.message === 'User with this email already exists') {
+                res.status(400).json(createResponse('error', null, error.message));
+            } else {
+                res.status(500).json(createResponse('error', null, 'Internal server error'));
+            }
         }
-    }
+    };
 
     public verifyOTP = async (req: Request, res: Response) => {
         try {
-            const result = await this.authService.verifyOTP(req.body.email, req.body.otp)
-            res.status(200).json(createResponse('success', result))
+            const result = await this.authService.verifyOTP(req.body.email, req.body.otp);
+            res.status(200).json(createResponse('success', result));
         } catch (error: any) {
-            console.error('Error in login:', error)
-            res.status(400).json(createResponse('error', null, error.message))
+            console.error('Error in verifyOTP:', error.message);
+    
+            if (error.message === 'User not found') {
+                res.status(404).json(createResponse('error', null, error.message));
+            } else if (error.message === 'Invalid or expired OTP') {
+                res.status(400).json(createResponse('error', null, error.message));
+            } else {
+                res.status(500).json(createResponse('error', null, 'Internal server error'));
+            }
         }
-    }
+    };
 
     public login = async (req: Request, res: Response) => {
         try {
             const result = await this.authService.login(req.body.email, req.body.password, req.body.device_id)
             res.status(200).json(createResponse('success', result))
         } catch (error: any) {
-            console.error('Error in login:', error)
-            res.status(400).json(createResponse('error', null, error.message))
+            console.error('Error in login:', error.message)
+
+            if (error.message === 'User not found') {
+                res.status(404).json(createResponse('error', null, error.message))
+            } else if (error.message === 'Password does not match') {
+                res.status(400).json(createResponse('error', null, error.message))
+            } else if (
+                error.message ===
+                'This account is already linked to another device. Please log out from the other device first.'
+            ) {
+                res.status(403).json(createResponse('error', null, error.message))
+            } else {
+                res.status(500).json(createResponse('error', null, 'Internal server error'))
+            }
         }
     }
 
@@ -63,13 +86,20 @@ export class AuthController {
 
     public forgotPassword = async (req: Request, res: Response) => {
         try {
-            const result = await this.authService.forgotPassword(req.body.email, req.body.device_id)
-            res.status(200).json(createResponse('success', result))
+            const result = await this.authService.forgotPassword(req.body.email, req.body.device_id);
+            res.status(200).json(createResponse('success', result));
         } catch (error: any) {
-            console.error('Error in forgotPassword:', error)
-            res.status(400).json(createResponse('error', null, error.message))
+            console.error('Error in forgotPassword:', error.message);
+    
+            if (error.message === 'User not found') {
+                res.status(404).json(createResponse('error', null, error.message));
+            } else if (error.message === 'Device mismatch') {
+                res.status(403).json(createResponse('error', null, error.message));
+            } else {
+                res.status(500).json(createResponse('error', null, 'Internal server error'));
+            }
         }
-    }
+    };
 
     public resetPassword = async (req: Request, res: Response) => {
         try {
@@ -104,10 +134,12 @@ export class AuthController {
     public debugRedis = async (req: Request, res: Response) => {
         try {
             await debugRedisKeys()
-            res.status(200).json(createResponse('success', { message: 'Redis debug completed. Check console for details.' }))
+            res.status(200).json(
+                createResponse('success', { message: 'Redis debug completed. Check console for details.' })
+            )
         } catch (error: any) {
             console.error('Error in debugRedis:', error)
             res.status(500).json(createResponse('error', null, 'Internal server error'))
         }
     }
-} 
+}

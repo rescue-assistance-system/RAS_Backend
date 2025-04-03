@@ -126,7 +126,7 @@ router.post('/register', validateRegister, authController.register)
  *                   properties:
  *                     message:
  *                       type: string
- *                       example: Account created successfully. Please log in to continue.
+ *                       example: Account verified successfully
  *                 error:
  *                   type: string
  *                   example: null
@@ -146,8 +146,23 @@ router.post('/register', validateRegister, authController.register)
  *                 error:
  *                   type: string
  *                   example: Invalid or expired OTP
- */
-router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ */router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
 
 /**
  * @swagger
@@ -198,7 +213,7 @@ router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
  *                   type: string
  *                   example: null
  *       400:
- *         description: Invalid credentials or device mismatch
+ *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
@@ -212,7 +227,39 @@ router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
  *                   example: null
  *                 error:
  *                   type: string
- *                   example: Invalid credentials
+ *                   example: Password does not match
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ *       403:
+ *         description: Device mismatch
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: This account is already linked to another device. Please log out from the other device first.
  */
 router.post('/login', validateLogin, authController.login)
 
@@ -258,7 +305,23 @@ router.post('/login', validateLogin, authController.login)
  *                   type: string
  *                   example: null
  *       400:
- *         description: User not found or device mismatch
+ *         description: Device mismatch or invalid request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Device mismatch
+ *       404:
+ *         description: User not found
  *         content:
  *           application/json:
  *             schema:
@@ -273,8 +336,24 @@ router.post('/login', validateLogin, authController.login)
  *                 error:
  *                   type: string
  *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
  */
-router.post('/request-otp', validateRequestOTP, authController.requestOTP)
+router.post('/request-otp', validateRequestOTP, authController.requestOTP);
 
 /**
  * @swagger
@@ -344,9 +423,9 @@ router.post('/request-otp', validateRequestOTP, authController.requestOTP)
 
 /**
  * @swagger
- * /auth/forgot-password:
+ * /auth/reset-password:
  *   post:
- *     summary: Request password reset
+ *     summary: Reset password
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -359,13 +438,17 @@ router.post('/request-otp', validateRequestOTP, authController.requestOTP)
  *                 type: string
  *                 description: Email of the user
  *                 example: user1@example.com
- *               device_id:
+ *               otp:
  *                 type: string
- *                 description: Device ID of the user
- *                 example: abc1
+ *                 description: OTP sent to the user's email
+ *                 example: 123456
+ *               new_password:
+ *                 type: string
+ *                 description: New password for the user
+ *                 example: newpassword123
  *     responses:
  *       200:
- *         description: OTP sent for password reset
+ *         description: Password reset successfully
  *         content:
  *           application/json:
  *             schema:
@@ -379,12 +462,28 @@ router.post('/request-otp', validateRequestOTP, authController.requestOTP)
  *                   properties:
  *                     message:
  *                       type: string
- *                       example: OTP sent for password reset
+ *                       example: Password reset successfully
  *                 error:
  *                   type: string
  *                   example: null
  *       400:
- *         description: User not found or device mismatch
+ *         description: Invalid or expired OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Invalid or expired OTP
+ *       404:
+ *         description: User not found
  *         content:
  *           application/json:
  *             schema:

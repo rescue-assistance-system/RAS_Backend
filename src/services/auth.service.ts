@@ -12,7 +12,7 @@ import {
 } from '../configs/email.config'
 
 export class AuthService {
-    async register(userData: { username: string;  email: string; password: string }) {
+    async register(userData: { username: string; email: string; password: string }) {
         const existingUser = await User.findOne({
             where: {
                 [Op.or]: [{ email: userData.email }]
@@ -20,7 +20,7 @@ export class AuthService {
         })
 
         if (existingUser) {
-            throw new Error('User with this email or phone number already exists')
+            throw new Error('User with this email already exists')
         }
 
         const hashedPassword = await bcrypt.hash(userData.password, 10)
@@ -82,28 +82,26 @@ export class AuthService {
         // Tìm tài khoản theo email
         const user = await User.findOne({
             where: { email }
-        });
-    
+        })
+
         if (!user) {
-            throw new Error('User not found');
+            throw new Error('User not found')
         }
-    
+
         // Kiểm tra mật khẩu
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) {
-            throw new Error('Invalid credentials');
+            throw new Error('Password does not match')
         }
-    
-        // Kiểm tra xem tài khoản đã được liên kết với một thiết bị khác chưa
+
         if (user.device_id && user.device_id !== device_id) {
-            throw new Error('This account is already linked to another device. Please log out from the other device first.');
+            throw new Error(
+                'This account is already linked to another device. Please log out from the other device first.'
+            )
         }
-    
-        // Liên kết device_id với tài khoản
-        user.device_id = device_id;
-        await user.save();
-    
-        // Tạo token
+        user.device_id = device_id
+        await user.save()
+
         const tokens = {
             access_token: generateAccessToken({
                 user_id: user.id,
@@ -113,9 +111,9 @@ export class AuthService {
                 user_id: user.id,
                 device_id: user.device_id
             })
-        };
-    
-        return tokens;
+        }
+
+        return tokens
     }
     async requestOTP(email: string, device_id: string) {
         const user = await User.findOne({
@@ -205,28 +203,28 @@ export class AuthService {
         const user = await User.findOne({
             where: { email }
         })
-    
+
         if (!user) {
             throw new Error('User not found')
         }
         console.log('user.device_id', user.device_id)
-        console.log('device_id', device_id);
+        console.log('device_id', device_id)
         // Kiểm tra device_id
         if (user.device_id !== device_id) {
             throw new Error('Device ID mismatch. Please use the registered device.')
         }
-    
+
         const otp = generateOTP()
         const htmlContent = generateOTPForgotPassword(otp)
         const emailSent = await sendEmail(email, 'Your OTP Code for RAS Forgot Password', htmlContent)
-    
+
         if (!emailSent) {
             throw new Error('Failed to send OTP email')
         }
-    
+
         storeOTP(email, otp)
         console.log(`OTP for ${email}: ${otp}`)
-    
+
         return {
             message: 'OTP sent for password reset',
             otp_expires_in: getOTPExpiry()
@@ -239,23 +237,23 @@ export class AuthService {
         if (!isValid) {
             throw new Error('Invalid or expired OTP')
         }
-    
+
         const user = await User.findOne({
             where: { email }
         })
-    
+
         if (!user) {
             throw new Error('User not found')
         }
-    
+
         // Hash mật khẩu mới
         const hashedPassword = await bcrypt.hash(new_password, 10)
         user.password = hashedPassword
         await user.save()
-    
+
         // Xóa OTP sau khi sử dụng
         clearOTP(email)
-    
+
         return {
             message: 'Password reset successfully'
         }
