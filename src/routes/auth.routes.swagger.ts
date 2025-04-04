@@ -86,6 +86,22 @@ const authController = new AuthController()
  *                 error:
  *                   type: string
  *                   example: User with this email already exists
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
  */ 
 router.post('/register', validateRegister, authController.register)
 
@@ -162,7 +178,24 @@ router.post('/register', validateRegister, authController.register)
  *                 error:
  *                   type: string
  *                   example: User not found
- */router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
 
 /**
  * @swagger
@@ -260,6 +293,22 @@ router.post('/register', validateRegister, authController.register)
  *                 error:
  *                   type: string
  *                   example: This account is already linked to another device. Please log out from the other device first.
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
  */
 router.post('/login', validateLogin, authController.login)
 
@@ -419,7 +468,24 @@ router.post('/request-otp', validateRequestOTP, authController.requestOTP);
  *                 error:
  *                   type: string
  *                   example: Invalid or expired OTP
- */router.post('/verify-login-otp', validateVerifyLoginOTP, authController.verifyLoginOTP)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post('/verify-login-otp', validateVerifyLoginOTP, authController.verifyLoginOTP)
 
 /**
  * @swagger
@@ -498,6 +564,22 @@ router.post('/request-otp', validateRequestOTP, authController.requestOTP);
  *                 error:
  *                   type: string
  *                   example: User not found
+ *         500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
  */
 router.post('/forgot-password', validateForgotPassword, authController.forgotPassword)
 
@@ -562,7 +644,24 @@ router.post('/forgot-password', validateForgotPassword, authController.forgotPas
  *                 error:
  *                   type: string
  *                   example: Invalid or expired OTP
- */router.post('/reset-password', validateResetPassword, authController.resetPassword)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post('/reset-password', validateResetPassword, authController.resetPassword)
 
 /**
  * @swagger
