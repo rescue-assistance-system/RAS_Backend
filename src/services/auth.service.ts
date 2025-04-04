@@ -79,37 +79,34 @@ export class AuthService {
     }
 
     async login(email: string, password: string, device_id: string) {
-        // Tìm tài khoản theo email
         const user = await User.findOne({
             where: { email }
-        })
-
+        });
+    
         if (!user) {
-            throw new Error('User not found')
+            throw new Error('User not found');
         }
-
-        // Kiểm tra mật khẩu
-        const isPasswordValid = await bcrypt.compare(password, user.password)
+    
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Password does not match')
+            throw new Error('Password does not match');
         }
-
-        // Kiểm tra xem device_id đã được liên kết với tài khoản khác chưa
+   
+        if (user.device_id && user.device_id !== device_id) {
+            throw new Error('This account is already linked to another device. Please send RequestOTP to verify the new device.');
+        }
+    
         const existingDeviceUser = await User.findOne({
             where: { device_id }
-        })
-
+        });
+    
         if (existingDeviceUser && existingDeviceUser.email !== email) {
-            throw new Error(
-                'This device is already linked to another account. Please log out from the other account first.'
-            )
+            throw new Error('This device is already linked to another account.');
         }
-
-        // Liên kết device_id với tài khoản hiện tại nếu chưa liên kết
-        user.device_id = device_id
-        await user.save()
-
-        // Tạo token
+    
+        user.device_id = device_id;
+        await user.save();
+    
         const tokens = {
             access_token: generateAccessToken({
                 user_id: user.id,
@@ -119,9 +116,12 @@ export class AuthService {
                 user_id: user.id,
                 device_id: user.device_id
             })
-        }
-
-        return tokens
+        };
+    
+        return {
+            message: 'Login successful.',
+            tokens
+        };
     }
     async requestOTP(email: string, device_id: string) {
         const user = await User.findOne({

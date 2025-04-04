@@ -44,22 +44,30 @@ export class AuthController {
 
     public login = async (req: Request, res: Response) => {
         try {
-            const result = await this.authService.login(req.body.email, req.body.password, req.body.device_id);
-            res.status(200).json(createResponse('success', result));
+            const result = await this.authService.login(req.body.email, req.body.password, req.body.device_id)
+            res.status(200).json(createResponse('success', result))
         } catch (error: any) {
-            console.error('Error in login:', error.message);
-    
+            console.error('Error in login:', error.message)
+
             if (error.message === 'User not found') {
-                res.status(404).json(createResponse('error', null, error.message));
+                res.status(404).json(createResponse('error', null, error.message))
             } else if (error.message === 'Password does not match') {
-                res.status(400).json(createResponse('error', null, error.message));
-            } else if (error.message === 'This device is already linked to another account. Please log out from the other account first.') {
-                res.status(403).json(createResponse('error', null, error.message));
+                res.status(400).json(createResponse('error', null, error.message))
+            } else if (
+                error.message ===
+                'This account is already linked to another device. Please send RequestOTP to verify the new device.'
+            ) {
+                res.status(403).json(createResponse('error', null, error.message))
+            } else if (
+                error.message ===
+                'This device is already linked to another account.'
+            ) {
+                res.status(403).json(createResponse('error', null, error.message))
             } else {
-                res.status(500).json(createResponse('error', null, 'Internal server error'));
+                res.status(500).json(createResponse('error', null, 'Internal server error'))
             }
         }
-    };
+    }
 
     public requestOTP = async (req: Request, res: Response) => {
         try {
