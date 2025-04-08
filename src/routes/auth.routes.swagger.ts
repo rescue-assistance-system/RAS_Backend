@@ -102,7 +102,7 @@ const authController = new AuthController()
  *                 error:
  *                   type: string
  *                   example: Internal server error
- */ 
+ */
 router.post('/register', validateRegister, authController.register)
 
 /**
@@ -402,7 +402,7 @@ router.post('/login', validateLogin, authController.login)
  *                   type: string
  *                   example: Internal server error
  */
-router.post('/request-otp', validateRequestOTP, authController.requestOTP);
+router.post('/request-otp', validateRequestOTP, authController.requestOTP)
 
 /**
  * @swagger

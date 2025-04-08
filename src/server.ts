@@ -34,7 +34,7 @@ redisClient
     .connect()
     .then(() => {
         console.log('Successfully connected to Redis')
-        console.timeEnd('Redis Connection') 
+        console.timeEnd('Redis Connection')
     })
     .catch((err) => {
         console.error('Failed to connect to Redis:', err)

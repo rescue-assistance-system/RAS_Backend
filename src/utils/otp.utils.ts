@@ -1,6 +1,6 @@
 import redisClient from '../configs/redis.config'
 
-const OTP_EXPIRY = 300 
+const OTP_EXPIRY = 300
 
 export const debugRedisKeys = async () => {
     try {
@@ -32,23 +32,23 @@ export const generateOTP = (): string => {
 export const storeOTP = async (email: string, otp: string): Promise<void> => {
     try {
         if (!redisClient.isOpen) {
-            console.log('Connecting to Redis...');
-            await redisClient.connect();
+            console.log('Connecting to Redis...')
+            await redisClient.connect()
         }
 
-        const key = `otp:${email}`;
+        const key = `otp:${email}`
 
-        console.log('Storing OTP in Redis with key:', key);
+        console.log('Storing OTP in Redis with key:', key)
 
         // Ghi đè OTP cũ bằng OTP mới
-        await redisClient.set(key, otp, { EX: OTP_EXPIRY });
+        await redisClient.set(key, otp, { EX: OTP_EXPIRY })
 
-        console.log('Stored OTP in Redis:', otp);
+        console.log('Stored OTP in Redis:', otp)
     } catch (error) {
-        console.error('Error in storeOTP:', error);
-        throw error;
+        console.error('Error in storeOTP:', error)
+        throw error
     }
-};
+}
 export const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
     try {
         if (!redisClient.isOpen) {

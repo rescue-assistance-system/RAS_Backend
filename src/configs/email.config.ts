@@ -1,7 +1,7 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from 'nodemailer'
+import dotenv from 'dotenv'
 
-dotenv.config();
+dotenv.config()
 
 export const generateOTPEmailContent = (otp: string): string => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; text-align: center;">
@@ -12,7 +12,7 @@ export const generateOTPEmailContent = (otp: string): string => `
         <p style="font-size: 14px;">This code will expire in <strong>5 minutes</strong>. Please do not share it with anyone.</p>
         <p style="margin-top: 20px; font-size: 14px; color: #666;">Best regards,<br><strong>RAS Team</strong></p>
     </div>
-`;
+`
 
 export const generateOTPVerifyDevice = (otp: string): string => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; text-align: center;">
@@ -24,7 +24,7 @@ export const generateOTPVerifyDevice = (otp: string): string => `
         <p style="font-size: 14px;">This code will expire in <strong>5 minutes</strong>. Please do not share it with anyone.</p>
         <p style="margin-top: 20px; font-size: 14px; color: #666;">Best regards,<br><strong>RAS Team</strong></p>
     </div>
-`;
+`
 export const generateOTPForgotPassword = (otp: string): string => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; text-align: center;">
         <h2 style="background: #d32f2f; color: white; padding: 15px; border-radius: 8px;">🚨 RAS - Rescue Assistance System 🚨</h2>
@@ -35,7 +35,7 @@ export const generateOTPForgotPassword = (otp: string): string => `
         <p style="font-size: 14px;">This code will expire in <strong>5 minutes</strong>. Please do not share it with anyone.</p>
         <p style="margin-top: 20px; font-size: 14px; color: #666;">Best regards,<br><strong>RAS Team</strong></p>
     </div>
-`;
+`
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -43,7 +43,7 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
     }
-});
+})
 
 export const sendEmail = async (to: string, subject: string, htmlContent: string) => {
     try {
@@ -52,15 +52,15 @@ export const sendEmail = async (to: string, subject: string, htmlContent: string
             to,
             subject,
             html: htmlContent
-        };
+        }
 
-        await transporter.sendMail(mailOptions);
-        console.log(`Email sent to ${to} with subject: ${subject}`);
-        return true;
+        await transporter.sendMail(mailOptions)
+        console.log(`Email sent to ${to} with subject: ${subject}`)
+        return true
     } catch (error) {
-        console.error('Error sending email:', error);
-        return false;
+        console.error('Error sending email:', error)
+        return false
     }
-};
+}
 
-export default transporter;
+export default transporter
