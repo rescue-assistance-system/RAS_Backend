@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { verifyAccessToken, extractTokenFromHeader } from '../utils/jwt.utils'
-
+import jwt from 'jsonwebtoken'
 export interface AuthenticatedRequest extends Request {
     user?: {
         user_id: number
@@ -8,17 +7,17 @@ export interface AuthenticatedRequest extends Request {
     }
 }
 
-export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = (req, res, next) => {
     try {
-        const token = extractTokenFromHeader(req)
+        const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
-            return res.status(401).json({ error: 'No token provided' })
+            return res.status(401).json({ message: 'Access token is missing' });
         }
 
-        const payload = verifyAccessToken(token)
-        req.user = payload
-        next()
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
     } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' })
+        res.status(403).json({ message: 'Invalid or expired token' });
     }
-}
+};

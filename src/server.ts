@@ -10,6 +10,8 @@ import compression from 'compression'
 import redisClient from './configs/redis.config'
 import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './configs/swagger.config'
+import trackingRouter from './routes/tracking.routes.swagger'
+
 
 const app: Express = express()
 
@@ -21,7 +23,7 @@ app.use(compression())
 app.use(express.urlencoded({ extended: true }))
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-
+app.use('/api/tracking', trackingRouter)
 // Route handling: All routes inside `userRouter` will be prefixed with `/api`
 app.use('/api/auth', userRouter)
 

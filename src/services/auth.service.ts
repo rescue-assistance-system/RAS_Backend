@@ -81,32 +81,34 @@ export class AuthService {
     async login(email: string, password: string, device_id: string) {
         const user = await User.findOne({
             where: { email }
-        });
-    
+        })
+
         if (!user) {
-            throw new Error('User not found');
+            throw new Error('User not found')
         }
-    
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) {
-            throw new Error('Password does not match');
+            throw new Error('Password does not match')
         }
-   
+
         if (user.device_id && user.device_id !== device_id) {
-            throw new Error('This account is already linked to another device. Please send RequestOTP to verify the new device.');
+            throw new Error(
+                'This account is already linked to another device. Please send RequestOTP to verify the new device.'
+            )
         }
-    
+
         const existingDeviceUser = await User.findOne({
             where: { device_id }
-        });
-    
+        })
+
         if (existingDeviceUser && existingDeviceUser.email !== email) {
-            throw new Error('This device is already linked to another account.');
+            throw new Error('This device is already linked to another account.')
         }
-    
-        user.device_id = device_id;
-        await user.save();
-    
+
+        user.device_id = device_id
+        await user.save()
+
         const tokens = {
             access_token: generateAccessToken({
                 user_id: user.id,
@@ -116,12 +118,12 @@ export class AuthService {
                 user_id: user.id,
                 device_id: user.device_id
             })
-        };
-    
+        }
+
         return {
             message: 'Login successful.',
             tokens
-        };
+        }
     }
     async requestOTP(email: string, device_id: string) {
         const user = await User.findOne({
