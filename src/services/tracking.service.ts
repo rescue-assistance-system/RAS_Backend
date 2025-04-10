@@ -1,7 +1,6 @@
-import { v4 as uuidv4 } from 'uuid'
 import redisClient from '../configs/redis.config'
-import { Op } from 'sequelize'
 import Tracking from '~/database/models/tracking.model'
+import User from '~/database/models/user.model'
 export class TrackingService {
     public async generateCode(userId: string) {
         try {
@@ -116,19 +115,26 @@ export class TrackingService {
             }
 
             console.log('Getting trackers for user ID:', userId)
-
-
             const trackers = await Tracking.findAll({
                 where: {
                     target_user_id: userId,
                     status: 'accepted'
                 },
-                attributes: ['tracker_user_id'],
-                raw: true
+                include: [
+                    {
+                        model: User,
+                        as: 'tracker',
+                        attributes: ['id', 'username', 'email'],
+                        required: true
+                    }
+                ],
             })
             console.log('Trackers from database:', trackers);
             const trackerList = trackers.map((tracker) => ({
-                user_id: tracker.tracker_user_id
+                user_id: tracker.tracker?.id,
+                username: tracker.tracker?.username,
+                email: tracker.tracker?.email,
+                // status: tracker.status,
             }));
 
 
@@ -142,19 +148,77 @@ export class TrackingService {
         }
     }
 
-    public async cancelRequest(fromId: number, toId: number) {
-        return { message: 'Tracking request canceled' }
-    }
+    // public async cancelRequest(fromId: number, toId: number) {
+    //     return { message: 'Tracking request canceled' }
+    // }
 
-    public async cancelTracking(userId: number, targetId: number) {
-        return { message: 'Tracking canceled successfully' }
+    public async cancelTracking(userId: number, cancelId: number) {
+        try {
+            const tracking = await Tracking.findOne({
+                where: {
+                    tracker_user_id: userId,
+                    target_user_id: cancelId,
+                    status: 'accepted',
+                },
+            });
+    
+            if (!tracking) {
+                throw new Error('No active tracking relationship found to cancel');
+            }
+    
+            await tracking.destroy();
+            return { message: 'Tracking canceled successfully' };
+        } catch (error: any) {
+            console.error('Error in cancelTracking:', error);
+            throw new Error(`Failed to cancel tracking: ${error.message}`);
+        }
     }
 
     public async blockUser(blockerId: number, blockedId: number) {
-        return { message: 'User blocked from tracking requests' }
+        try {
+            const tracking = await Tracking.findOne({
+                where: {
+                    tracker_user_id: blockerId, // Người chặn
+                    target_user_id: blockedId, // Người bị chặn
+                    status: 'accepted', // Chỉ chặn nếu mối quan hệ đang ở trạng thái accepted
+                },
+            });
+    
+            if (!tracking) {
+                throw new Error('No active tracking relationship found to block');
+            }
+    
+            tracking.status = 'blocked';
+            await tracking.save();
+    
+            return { message: 'User blocked successfully' };
+        } catch (error: any) {
+            console.error('Error in blockUser:', error);
+            throw new Error(`Failed to block user: ${error.message}`);
+        }
     }
 
     public async unblockUser(blockerId: number, blockedId: number) {
-        return { message: 'User unblocked from tracking requests' }
+        try {
+            const tracking = await Tracking.findOne({
+                where: {
+                    tracker_user_id: blockerId, 
+                    target_user_id: blockedId, 
+                    status: 'blocked', 
+                },
+            });
+    
+            if (!tracking) {
+                throw new Error('No blocked tracking relationship found to unblock');
+            }
+    
+            tracking.status = 'accepted';
+            await tracking.save();
+    
+            return { message: 'User unblocked successfully' };
+        } catch (error: any) {
+            console.error('Error in unblockUser:', error);
+            throw new Error(`Failed to unblock user: ${error.message}`);
+        }
     }
 }

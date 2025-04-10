@@ -12,7 +12,7 @@ export class TrackingController {
     public generateCode = async (req: Request, res: Response) => {
         try {
             const userId = req.user?.user_id
-            console.log('Current authenticated user:', userId);
+            console.log('Current authenticated user:', userId)
 
             if (!userId) {
                 return res.status(400).json(createResponse('error', null, 'User ID is required'))
@@ -22,7 +22,14 @@ export class TrackingController {
             return res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error generating tracking code:', error)
-            return res.status(500).json(createResponse('error', null, error.message))
+            const errorMessage = error.message || 'Internal server error'
+            if (errorMessage.includes('database')) {
+                return res.status(500).json(createResponse('error', null, 'Database error occurred'))
+            } else if (errorMessage.includes('network')) {
+                return res.status(500).json(createResponse('error', null, 'Network error occurred'))
+            } else {
+                return res.status(500).json(createResponse('error', null, errorMessage))
+            }
         }
     }
 
@@ -45,7 +52,14 @@ export class TrackingController {
             return res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error accepting tracking request:', error)
-            return res.status(500).json(createResponse('error', null, error.message))
+            const errorMessage = error.message || 'Internal server error'
+            if (errorMessage.includes('database')) {
+                return res.status(500).json(createResponse('error', null, 'Database error occurred'))
+            } else if (errorMessage.includes('network')) {
+                return res.status(500).json(createResponse('error', null, 'Network error occurred'))
+            } else {
+                return res.status(500).json(createResponse('error', null, errorMessage))
+            }
         }
     }
 
@@ -66,7 +80,14 @@ export class TrackingController {
             return res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error getting trackers:', error)
-            return res.status(500).json(createResponse('error', null, error.message))
+            const errorMessage = error.message || 'Internal server error'
+            if (errorMessage.includes('database')) {
+                return res.status(500).json(createResponse('error', null, 'Database error occurred'))
+            } else if (errorMessage.includes('network')) {
+                return res.status(500).json(createResponse('error', null, 'Network error occurred'))
+            } else {
+                return res.status(500).json(createResponse('error', null, errorMessage))
+            }
         }
     }
 
@@ -79,30 +100,87 @@ export class TrackingController {
     //     }
     // }
 
-    // public cancelTracking = async (req: Request, res: Response) => {
-    //     try {
-    //         const result = await this.trackingService.cancelTracking(req.body.user_id, req.body.target_id)
-    //         res.status(200).json(createResponse('success', result))
-    //     } catch (error: any) {
-    //         res.status(500).json(createResponse('error', null, error.message))
-    //     }
-    // }
+    public cancelTracking = async (req: Request, res: Response) => {
+        try {
+            const { cancel_user_id } = req.body
+            const currentUserId = req.user?.user_id
 
-    // public blockUser = async (req: Request, res: Response) => {
-    //     try {
-    //         const result = await this.trackingService.blockUser(req.body.blocker_id, req.body.blocked_id)
-    //         res.status(200).json(createResponse('success', result))
-    //     } catch (error: any) {
-    //         res.status(500).json(createResponse('error', null, error.message))
-    //     }
-    // }
+            if (!cancel_user_id) {
+                return res.status(400).json(createResponse('error', null, 'Target user ID is required'))
+            }
 
-    // public unblockUser = async (req: Request, res: Response) => {
-    //     try {
-    //         const result = await this.trackingService.unblockUser(req.body.blocker_id, req.body.blocked_id)
-    //         res.status(200).json(createResponse('success', result))
-    //     } catch (error: any) {
-    //         res.status(500).json(createResponse('error', null, error.message))
-    //     }
-    // }
+            if (!currentUserId) {
+                return res.status(401).json(createResponse('error', null, 'Unauthorized'))
+            }
+
+            const result = await this.trackingService.cancelTracking(currentUserId, cancel_user_id)
+            return res.status(200).json(createResponse('success', result))
+        } catch (error: any) {
+            console.error('Error canceling tracking relationship:', error)
+            const errorMessage = error.message || 'Internal server error'
+            if (errorMessage.includes('database')) {
+                return res.status(500).json(createResponse('error', null, 'Database error occurred'))
+            } else if (errorMessage.includes('network')) {
+                return res.status(500).json(createResponse('error', null, 'Network error occurred'))
+            } else {
+                return res.status(500).json(createResponse('error', null, errorMessage))
+            }
+        }
+    }
+
+    public blockUser = async (req: Request, res: Response) => {
+        try {
+            const currentUserId = req.user?.user_id
+            const { blocked_user_id } = req.body
+
+            if (!blocked_user_id) {
+                return res.status(400).json(createResponse('error', null, 'Blocked user ID is required'))
+            }
+
+            if (!currentUserId) {
+                return res.status(401).json(createResponse('error', null, 'Unauthorized'))
+            }
+
+            const result = await this.trackingService.blockUser(currentUserId, blocked_user_id)
+            return res.status(200).json(createResponse('success', result))
+        } catch (error: any) {
+            console.error('Error blocking user:', error)
+            const errorMessage = error.message || 'Internal server error'
+            if (errorMessage.includes('database')) {
+                return res.status(500).json(createResponse('error', null, 'Database error occurred'))
+            } else if (errorMessage.includes('network')) {
+                return res.status(500).json(createResponse('error', null, 'Network error occurred'))
+            } else {
+                return res.status(500).json(createResponse('error', null, errorMessage))
+            }
+        }
+    }
+
+    public unblockUser = async (req: Request, res: Response) => {
+        try {
+            const currentUserId = req.user?.user_id
+            const { blocked_user_id } = req.body
+
+            if (!blocked_user_id) {
+                return res.status(400).json(createResponse('error', null, 'Blocked user ID is required'))
+            }
+
+            if (!currentUserId) {
+                return res.status(401).json(createResponse('error', null, 'Unauthorized'))
+            }
+
+            const result = await this.trackingService.unblockUser(currentUserId, blocked_user_id)
+            return res.status(200).json(createResponse('success', result))
+        } catch (error: any) {
+            console.error('Error unblocking user:', error)
+            const errorMessage = error.message || 'Internal server error'
+            if (errorMessage.includes('database')) {
+                return res.status(500).json(createResponse('error', null, 'Database error occurred'))
+            } else if (errorMessage.includes('network')) {
+                return res.status(500).json(createResponse('error', null, 'Network error occurred'))
+            } else {
+                return res.status(500).json(createResponse('error', null, errorMessage))
+            }
+        }
+    }
 }

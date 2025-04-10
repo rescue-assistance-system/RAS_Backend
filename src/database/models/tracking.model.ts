@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
+import User from './user.model'
 
 class Tracking extends Model {
     // public id!: number
@@ -28,7 +29,7 @@ Tracking.init(
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'pending', // Trạng thái mặc định là 'pending'
+            defaultValue: 'pending', 
         },
     },
     {
@@ -38,5 +39,9 @@ Tracking.init(
         timestamps: true,
     }
 )
+Tracking.belongsTo(User, {
+    foreignKey: 'tracker_user_id',
+    as: 'tracker', 
+});
 
 export default Tracking
