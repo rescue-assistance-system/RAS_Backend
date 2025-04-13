@@ -9,8 +9,9 @@
         "skipLibCheck": true /* Skip type checking all .d.ts files. */,
         "baseUrl": ".",
         "paths": {
-            "~/*": ["src/*"]
-        }
+            "~/*": ["src/*"] // Đường dẫn tương đối cho các import (alias)
+        },
+        "resolveJsonModule": true
     },
     "files": ["type.d.ts"], 
     "include": ["src/**/*"] 
