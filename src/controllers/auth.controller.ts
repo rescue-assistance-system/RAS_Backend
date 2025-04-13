@@ -58,10 +58,7 @@ export class AuthController {
                 'This account is already linked to another device. Please send RequestOTP to verify the new device.'
             ) {
                 res.status(403).json(createResponse('error', null, error.message))
-            } else if (
-                error.message ===
-                'This device is already linked to another account.'
-            ) {
+            } else if (error.message === 'This device is already linked to another account.') {
                 res.status(403).json(createResponse('error', null, error.message))
             } else {
                 res.status(500).json(createResponse('error', null, 'Internal server error'))

@@ -1,11 +1,11 @@
-import { Router } from 'express';
-import { TrackingController } from '../controllers/tracking.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { Router } from 'express'
+import { TrackingController } from '../controllers/tracking.controller'
+import { authenticateToken } from '../middleware/auth.middleware'
 
-const router = Router();
-const trackingController = new TrackingController();
+const router = Router()
+const trackingController = new TrackingController()
 
-router.use(authenticateToken);
+router.use(authenticateToken)
 
 /**
  * @swagger
@@ -86,7 +86,64 @@ router.use(authenticateToken);
  *                   type: string
  *                   example: "Internal server error"
  */
-router.get('/generate_code', trackingController.generateCode.bind(trackingController));
+router.get('/generate_code', trackingController.generateCode.bind(trackingController))
+
+/**
+ * @swagger
+ * /get-user-info:
+ *   post:
+ *     summary: Get user information by verification code
+ *     tags: [Tracking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               verification_code:
+ *                 type: string
+ *                 description: Verification code to get user information
+ *             required:
+ *               - verification_code
+ *           example:
+ *             verification_code: "123456"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Successfully retrieved user information"
+ *                 user_info:
+ *                   type: object
+ *                   properties:
+ *                     user_id:
+ *                       type: integer
+ *                       example: 6
+ *                     username:
+ *                       type: string
+ *                       example: "johndoe"
+ *                     email:
+ *                       type: string
+ *                       example: "john@example.com"
+ *       400:
+ *         description: Invalid request or verification code
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid or expired verification code"
+ */
+router.post('/get-user-info', trackingController.getUserInfoByVerificationCode.bind(trackingController))
+
 /**
  * @swagger
  * /accept:
@@ -160,8 +217,7 @@ router.get('/generate_code', trackingController.generateCode.bind(trackingContro
  *                   type: string
  *                   example: "Failed to accept tracking request: Invalid or expired verification code"
  */
-router.post('/accept', trackingController.acceptTracking.bind(trackingController));
-
+router.post('/accept', trackingController.acceptTracking.bind(trackingController))
 
 /**
  * @swagger
@@ -217,7 +273,7 @@ router.post('/accept', trackingController.acceptTracking.bind(trackingController
  *                   type: string
  *                   example: "Access token is missing"
  */
-router.get('/trackers', trackingController.getTrackers.bind(trackingController));
+router.get('/trackers', trackingController.getTrackers.bind(trackingController))
 
 /**
  * @swagger
@@ -295,7 +351,7 @@ router.get('/trackers', trackingController.getTrackers.bind(trackingController))
  *                   type: string
  *                   example: "Failed to cancel tracking: No active tracking relationship found to cancel"
  */
-router.delete('/cancel', trackingController.cancelTracking.bind(trackingController));
+router.delete('/cancel', trackingController.cancelTracking.bind(trackingController))
 
 /**
  * @swagger
@@ -384,7 +440,7 @@ router.delete('/cancel', trackingController.cancelTracking.bind(trackingControll
  *                   type: string
  *                   example: "Failed to block user: No active tracking relationship found to block"
  */
-router.post('/block', trackingController.blockUser.bind(trackingController));
+router.post('/block', trackingController.blockUser.bind(trackingController))
 
 /**
  * @swagger
@@ -472,6 +528,6 @@ router.post('/block', trackingController.blockUser.bind(trackingController));
  *                   type: string
  *                   example: "Internal server error"
  */
-router.post('/unblock', trackingController.unblockUser.bind(trackingController));
+router.post('/unblock', trackingController.unblockUser.bind(trackingController))
 
-export default router;
+export default router
