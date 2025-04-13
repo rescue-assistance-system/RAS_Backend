@@ -35,7 +35,7 @@ RescueTeam.init(
             allowNull: false
         },
         team_members: {
-            type: DataTypes.JSONB, 
+            type: DataTypes.JSONB,
             allowNull: true,
             defaultValue: [],
             get() {

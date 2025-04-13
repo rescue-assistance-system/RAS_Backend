@@ -80,7 +80,6 @@ export class TrackingService {
             throw new Error(`Failed to get user information: ${error.message}`)
         }
     }
-    
 
     public async acceptTracking(verificationCode: string, currentUserId: string) {
         try {
@@ -90,7 +89,7 @@ export class TrackingService {
 
             const keys = await redisClient.keys('tracking_code:*')
             let trackingData = null
-            
+
             const user = await User.findByPk(trackingData.user_id)
             if (!user) {
                 throw new Error('User not found')
@@ -273,6 +272,4 @@ export class TrackingService {
             throw new Error(`Failed to unblock user: ${error.message}`)
         }
     }
-
-   
 }

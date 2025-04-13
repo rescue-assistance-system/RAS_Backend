@@ -6,7 +6,7 @@ export interface AuthenticatedRequest extends Request {
         device_id: string
     }
 }
-import { verifyAccessToken } from '../utils/jwt.utils';
+import { verifyAccessToken } from '../utils/jwt.utils'
 
 export const authenticateToken = (req, res, next) => {
     try {
@@ -25,20 +25,20 @@ export const authenticateToken = (req, res, next) => {
 export const authorize = (requiredRole: string) => {
     return (req, res, next) => {
         try {
-            const token = req.headers.authorization?.split(' ')[1];
+            const token = req.headers.authorization?.split(' ')[1]
             if (!token) {
-                return res.status(401).json({ message: 'Unauthorized' });
+                return res.status(401).json({ message: 'Unauthorized' })
             }
 
-            const payload = verifyAccessToken(token);
+            const payload = verifyAccessToken(token)
             if (payload.role !== requiredRole) {
-                return res.status(403).json({ message: 'Forbidden: Insufficient role' });
+                return res.status(403).json({ message: 'Forbidden: Insufficient role' })
             }
 
-            req.user = payload;
-            next();
+            req.user = payload
+            next()
         } catch (error) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            return res.status(401).json({ message: 'Unauthorized' })
         }
-    };
-};
+    }
+}

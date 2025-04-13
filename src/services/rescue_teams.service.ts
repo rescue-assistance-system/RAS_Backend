@@ -56,7 +56,7 @@ class RescueTeamService {
             default_longitude: data.default_longitude,
             description: data.description
         }
-        
+
         console.log('Profile data before save:', profileData)
 
         const profile = await RescueTeam.create(profileData)
@@ -129,8 +129,6 @@ class RescueTeamService {
         await profile.update(data)
         return profile
     }
-
-    
 
     async getRescueTeams() {
         return await User.findAll({ where: { role: 'rescue_team' } }) //, attributes: { exclude: ['password'] }

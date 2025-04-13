@@ -17,7 +17,7 @@ import routes from './routes/index'
 import cors from 'cors'
 
 const app: Express = express()
-app.use(cors());
+app.use(cors())
 // Middleware to parse JSON requests
 app.use(express.json())
 app.use(morgan('dev'))
