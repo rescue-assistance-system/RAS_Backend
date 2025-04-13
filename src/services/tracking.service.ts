@@ -144,10 +144,10 @@ export class TrackingService {
             return {
                 // message: 'Tracking request accepted successfully',
                 //tracking_data: {
-                    tracker_user_id: trackingData.tracker_user_id,
-                    target_user_id: trackingData.target_user_id,
-                    status: trackingData.status
-                    // accepted_at: trackingData.accepted_at
+                tracker_user_id: trackingData.tracker_user_id,
+                target_user_id: trackingData.target_user_id,
+                status: trackingData.status
+                // accepted_at: trackingData.accepted_at
                 //}
             }
         } catch (error: any) {
