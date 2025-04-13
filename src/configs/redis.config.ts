@@ -1,13 +1,13 @@
-import { createClient } from 'redis';
-import dotenv from 'dotenv';
+import { createClient } from 'redis'
+import dotenv from 'dotenv'
 
-dotenv.config();
+dotenv.config()
 
 const redisClient = createClient({
     url: `redis://${process.env.REDIS_HOST}`,
-    password: process.env.REDIS_PASSWORD, 
-});
+    password: process.env.REDIS_PASSWORD
+})
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('error', (err) => console.error('Redis Client Error', err))
 
-export default redisClient;
+export default redisClient

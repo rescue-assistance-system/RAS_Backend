@@ -32,6 +32,15 @@ export class TrackingController {
             }
         }
     }
+    public async getUserInfoByVerificationCode(req: Request, res: Response) {
+        try {
+            const { verification_code } = req.body
+            const result = await this.trackingService.getUserInfoByVerificationCode(verification_code)
+            res.status(200).json(result)
+        } catch (error: any) {
+            res.status(400).json({ message: error.message })
+        }
+    }
 
     public acceptTracking = async (req: Request, res: Response) => {
         try {
@@ -183,4 +192,6 @@ export class TrackingController {
             }
         }
     }
+
+   
 }

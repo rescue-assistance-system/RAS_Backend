@@ -11,6 +11,7 @@ import {
     validateRefreshToken,
     validateLogout
 } from '../middleware/validation.middleware'
+import { authorize } from '../middleware/auth.middleware';
 
 const router = Router()
 const authController = new AuthController()
@@ -102,7 +103,7 @@ const authController = new AuthController()
  *                 error:
  *                   type: string
  *                   example: Internal server error
- */ 
+ */
 router.post('/register', validateRegister, authController.register)
 
 /**
@@ -310,7 +311,7 @@ router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
  *                   type: string
  *                   example: Internal server error
  */
-router.post('/login', validateLogin, authController.login)
+router.post('/login',  validateLogin, authController.login)
 
 /**
  * @swagger
@@ -402,7 +403,7 @@ router.post('/login', validateLogin, authController.login)
  *                   type: string
  *                   example: Internal server error
  */
-router.post('/request-otp', validateRequestOTP, authController.requestOTP);
+router.post('/request-otp', validateRequestOTP, authController.requestOTP)
 
 /**
  * @swagger
@@ -724,5 +725,7 @@ router.post('/logout', validateLogout, authController.logout)
  *         description: Internal server error
  */
 router.get('/debug-redis', authController.debugRedis)
-
+router.get('/admin-only', authorize('admin'), (req, res) => {
+    res.json({ message: 'Welcome, admin!' });
+});
 export default router

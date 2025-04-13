@@ -20,28 +20,28 @@ Tracking.init(
         },
         tracker_user_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: false
         },
         target_user_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: false
         },
         status: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'pending', 
-        },
+            defaultValue: 'pending'
+        }
     },
     {
         sequelize,
         modelName: 'Tracking',
         tableName: 'tracking_permissions',
-        timestamps: true,
+        timestamps: true
     }
 )
 Tracking.belongsTo(User, {
     foreignKey: 'tracker_user_id',
-    as: 'tracker', 
-});
+    as: 'tracker'
+})
 
 export default Tracking

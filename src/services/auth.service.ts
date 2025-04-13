@@ -79,50 +79,58 @@ export class AuthService {
     }
 
     async login(email: string, password: string, device_id: string) {
-        const user = await User.findOne({
-            where: { email }
-        })
-
-        if (!user) {
-            throw new Error('User not found')
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password)
-        if (!isPasswordValid) {
-            throw new Error('Password does not match')
-        }
-
-        if (user.device_id && user.device_id !== device_id) {
-            throw new Error(
-                'This account is already linked to another device. Please send RequestOTP to verify the new device.'
-            )
-        }
-
-        const existingDeviceUser = await User.findOne({
-            where: { device_id }
-        })
-
-        if (existingDeviceUser && existingDeviceUser.email !== email) {
-            throw new Error('This device is already linked to another account.')
-        }
-
-        user.device_id = device_id
-        await user.save()
-
-        const tokens = {
-            access_token: generateAccessToken({
-                user_id: user.id,
-                device_id: user.device_id
-            }),
-            refresh_token: generateRefreshToken({
-                user_id: user.id,
-                device_id: user.device_id
+        try {
+            const user = await User.findOne({
+                where: { email }
             })
-        }
 
-        return {
-            message: 'Login successful.',
-            tokens
+            if (!user) {
+                throw new Error('User not found')
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, user.dataValues.password)
+            if (!isPasswordValid) {
+                throw new Error('Password does not match')
+            }
+
+            if (user.dataValues.device_id && user.dataValues.device_id !== device_id) {
+                throw new Error(
+                    'This account is already linked to another device. Please send RequestOTP to verify the new device.'
+                )
+            }
+
+            const existingDeviceUser = await User.findOne({
+                where: { device_id: device_id }
+            })
+
+            if (existingDeviceUser && existingDeviceUser.dataValues.email !== email) {
+                throw new Error('This device is already linked to another account.')
+            }
+
+            user.dataValues.device_id = device_id
+            await user.save()
+
+            const tokens = {
+                access_token: generateAccessToken({
+                    user_id: user.dataValues.id,
+                    device_id: user.dataValues.device_id,
+                    role: user.dataValues.role
+                }),
+                refresh_token: generateRefreshToken({
+                    user_id: user.id,
+                    device_id: user.dataValues.device_id,
+                    role: user.dataValues.role
+                })
+            }
+
+            return {
+                message: 'Login successful.',
+                tokens,
+                role: user.dataValues.role
+            }
+        } catch (error) {
+            console.error('Error in login:', error)
+            throw error
         }
     }
     async requestOTP(email: string, device_id: string) {

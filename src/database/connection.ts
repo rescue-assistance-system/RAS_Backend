@@ -17,7 +17,7 @@ sequelize
     .authenticate()
     .then(() => {
         console.log('✅ Database connection established successfully.')
-        return sequelize.sync({ force: false  }) // This will drop and recreate all tables
+        return sequelize.sync({ force: false }) // This will drop and recreate all tables
     })
     .then(() => console.log('✅ Database & tables synced successfully'))
     .catch((err) => console.error('❌ Database error:', err))

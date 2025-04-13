@@ -2,21 +2,21 @@ import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
 
 class User extends Model {
-    // public id!: number
-    // public username!: string
-    // public phone!: string
-    // public email!: string
-    // public password!: string
-    // public role!: 'user' | 'admin' | 'rescue_team'
-    // public gender!: 'male' | 'female'
-    // public birthday!: Date
-    // public cccd!: string
-    // public latitude!: number
-    // public longitude!: number
-    // public is_verified!: boolean
-    // public device_id!: string
-    // public readonly created_at!: Date
-    // public readonly updated_at!: Date
+    public id!: number
+    public username!: string
+    public phone!: string
+    public email!: string
+    public password!: string
+    public role!: 'user' | 'admin' | 'rescue_team' | 'coordinator'
+    public gender!: 'male' | 'female'
+    public birthday!: Date
+    public cccd!: string
+    public latitude!: number
+    public longitude!: number
+    public is_verified!: boolean
+    public device_id!: string
+    public readonly created_at!: Date
+    public readonly updated_at!: Date
 }
 
 User.init(
@@ -49,7 +49,7 @@ User.init(
             allowNull: false
         },
         role: {
-            type: DataTypes.ENUM('user', 'admin', 'rescue_team'),
+            type: DataTypes.ENUM('user', 'admin', 'rescue_team', 'coordinator'),
             allowNull: false,
             defaultValue: 'user'
         },
@@ -86,6 +86,7 @@ User.init(
     },
     {
         sequelize,
+        modelName: 'User',
         tableName: 'accounts',
         timestamps: true,
         underscored: true

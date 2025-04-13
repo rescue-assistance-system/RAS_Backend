@@ -11,10 +11,13 @@ import redisClient from './configs/redis.config'
 import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './configs/swagger.config'
 import trackingRouter from './routes/tracking.routes.swagger'
+import adminRouter from './routes/admin.routes.swagger'
+import routes from './routes/index'
 
+import cors from 'cors'
 
 const app: Express = express()
-
+app.use(cors());
 // Middleware to parse JSON requests
 app.use(express.json())
 app.use(morgan('dev'))
@@ -23,9 +26,7 @@ app.use(compression())
 app.use(express.urlencoded({ extended: true }))
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
-app.use('/api/tracking', trackingRouter)
-// Route handling: All routes inside `userRouter` will be prefixed with `/api`
-app.use('/api/auth', userRouter)
+app.use('/api', routes)
 
 // Error handling middlewares
 app.use(errorConverter)
@@ -36,7 +37,7 @@ redisClient
     .connect()
     .then(() => {
         console.log('Successfully connected to Redis')
-        console.timeEnd('Redis Connection') 
+        console.timeEnd('Redis Connection')
     })
     .catch((err) => {
         console.error('Failed to connect to Redis:', err)
