@@ -47,7 +47,6 @@ class RescueTeamService {
         if (existingProfile) {
             throw new Error('Profile already exists for this rescue team')
         }
-        // Đảm bảo team_members là một mảng
         const profileData = {
             user_id: userId,
             team_name: data.team_name,
@@ -61,7 +60,6 @@ class RescueTeamService {
 
         const profile = await RescueTeam.create(profileData)
 
-        // Log dữ liệu đã lưu
         console.log('Saved profile:', profile.toJSON())
 
         return profile

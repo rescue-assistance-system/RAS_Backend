@@ -36,9 +36,9 @@ export class TrackingController {
         try {
             const { verification_code } = req.body
             const result = await this.trackingService.getUserInfoByVerificationCode(verification_code)
-            res.status(200).json(result)
+            res.status(200).json(createResponse('success', result))
         } catch (error: any) {
-            res.status(400).json({ message: error.message })
+            res.status(400).json(createResponse('error', null, error.message))
         }
     }
 
@@ -46,6 +46,7 @@ export class TrackingController {
         try {
             const { verification_code } = req.body
             const currentUserId = req.user?.user_id
+            console.log('Current authenticated user accepting tracking:', currentUserId)
 
             if (!verification_code) {
                 return res.status(400).json(createResponse('error', null, 'Verification code is required'))

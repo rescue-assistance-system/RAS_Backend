@@ -26,7 +26,7 @@ export class TrackingService {
             )
 
             return {
-                message: 'Tracking request sent successfully',
+                // message: 'Tracking request sent successfully',
                 verification_code: verificationCode
             }
         } catch (error: any) {
@@ -68,12 +68,9 @@ export class TrackingService {
             }
 
             return {
-                message: 'Successfully retrieved user information',
-                user_info: {
-                    user_id: user.dataValues.id,
-                    username: user.dataValues.username,
-                    email: user.dataValues.email
-                }
+                user_id: user.dataValues.id,
+                username: user.dataValues.username,
+                email: user.dataValues.email
             }
         } catch (error: any) {
             console.error('Error in getUserInfoByVerificationCode:', error)
@@ -90,11 +87,6 @@ export class TrackingService {
             const keys = await redisClient.keys('tracking_code:*')
             let trackingData = null
 
-            const user = await User.findByPk(trackingData.user_id)
-            if (!user) {
-                throw new Error('User not found')
-            }
-
             for (const key of keys) {
                 const data = await redisClient.get(key)
                 if (data) {
@@ -110,6 +102,10 @@ export class TrackingService {
 
             if (!trackingData) {
                 throw new Error('Invalid or expired verification code')
+            }
+            const user = await User.findByPk(trackingData.user_id)
+            if (!user) {
+                throw new Error('User not found')
             }
 
             if (trackingData.status !== 'pending') {
@@ -146,13 +142,13 @@ export class TrackingService {
             }
 
             return {
-                message: 'Tracking request accepted successfully',
-                tracking_data: {
+                // message: 'Tracking request accepted successfully',
+                //tracking_data: {
                     tracker_user_id: trackingData.tracker_user_id,
                     target_user_id: trackingData.target_user_id,
                     status: trackingData.status
                     // accepted_at: trackingData.accepted_at
-                }
+                //}
             }
         } catch (error: any) {
             console.error('Error in acceptTracking:', error)
@@ -182,17 +178,14 @@ export class TrackingService {
                 ]
             })
             console.log('Trackers from database:', trackers)
-            const trackerList = trackers.map((tracker) => ({
-                user_id: tracker.tracker?.id,
-                username: tracker.tracker?.username,
-                email: tracker.tracker?.email
-                // status: tracker.status,
-            }))
 
-            return {
-                message: 'Successfully retrieved trackers',
-                trackers: trackerList
-            }
+            const trackerList1 = trackers.map((tracker) => tracker.toJSON())
+            const trackerList = trackerList1.map((tracker) => ({
+                user_id: tracker.tracker.id,
+                username: tracker.tracker.username,
+                email: tracker.tracker.email
+            }))
+            return trackerList
         } catch (error: any) {
             console.error('Error in getTrackers:', error)
             throw new Error(`Failed to get trackers: ${error.message}`)
@@ -229,9 +222,9 @@ export class TrackingService {
         try {
             const tracking = await Tracking.findOne({
                 where: {
-                    tracker_user_id: blockerId, // Người chặn
-                    target_user_id: blockedId, // Người bị chặn
-                    status: 'accepted' // Chỉ chặn nếu mối quan hệ đang ở trạng thái accepted
+                    tracker_user_id: blockerId,
+                    target_user_id: blockedId,
+                    status: 'accepted'
                 }
             })
 
