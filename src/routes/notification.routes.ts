@@ -4,7 +4,7 @@ import { authorize } from '../middleware/auth.middleware'
 
 const router = Router()
 
-// Register
+// Register routes
 router.post('/test-send', authorize('user'), (req: Request, res: Response) =>
     notificationController.testSendNotification(req, res)
 )
