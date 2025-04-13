@@ -250,7 +250,6 @@ export class AuthService {
     }
 
     async resetPassword(email: string, otp: string, new_password: string) {
-        // Kiểm tra OTP
         const isValid = await verifyOTP(email, otp)
         if (!isValid) {
             throw new Error('Invalid or expired OTP')

@@ -39,8 +39,6 @@ export const storeOTP = async (email: string, otp: string): Promise<void> => {
         const key = `otp:${email}`
 
         console.log('Storing OTP in Redis with key:', key)
-
-        // Ghi đè OTP cũ bằng OTP mới
         await redisClient.set(key, otp, { EX: OTP_EXPIRY })
 
         console.log('Stored OTP in Redis:', otp)

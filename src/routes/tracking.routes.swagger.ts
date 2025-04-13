@@ -36,12 +36,9 @@ router.use(authenticateToken)
  *                 data:
  *                   type: object
  *                   properties:
- *                     message:
- *                       type: string
- *                       example: "Tracking request sent successfully"
  *                     verification_code:
  *                       type: string
- *                       example: "6Y0HVLG6"
+ *                       example: "3DV6KMLX"
  *                 error:
  *                   type: string
  *                   nullable: true
@@ -106,8 +103,6 @@ router.get('/generate_code', trackingController.generateCode.bind(trackingContro
  *                 description: Verification code to get user information
  *             required:
  *               - verification_code
- *           example:
- *             verification_code: "123456"
  *     responses:
  *       200:
  *         description: Successfully retrieved user information
@@ -116,21 +111,25 @@ router.get('/generate_code', trackingController.generateCode.bind(trackingContro
  *             schema:
  *               type: object
  *               properties:
- *                 message:
+ *                 status:
  *                   type: string
- *                   example: "Successfully retrieved user information"
- *                 user_info:
+ *                   example: "success"
+ *                 data:
  *                   type: object
  *                   properties:
  *                     user_id:
  *                       type: integer
- *                       example: 6
+ *                       example: 7
  *                     username:
  *                       type: string
- *                       example: "johndoe"
+ *                       example: "Nguyen Thi Le"
  *                     email:
  *                       type: string
- *                       example: "john@example.com"
+ *                       example: "dilystech23@gmail.com"
+ *                 error:
+ *                   type: string
+ *                   nullable: true
+ *                   example: null
  *       400:
  *         description: Invalid request or verification code
  *         content:
@@ -164,8 +163,6 @@ router.post('/get-user-info', trackingController.getUserInfoByVerificationCode.b
  *                 description: Verification code for accepting the tracking request
  *             required:
  *               - verification_code
- *           example:
- *             verification_code: "123456"
  *     responses:
  *       200:
  *         description: Successfully accepted tracking request
@@ -180,21 +177,15 @@ router.post('/get-user-info', trackingController.getUserInfoByVerificationCode.b
  *                 data:
  *                   type: object
  *                   properties:
- *                     message:
+ *                     tracker_user_id:
+ *                       type: integer
+ *                       example: 7
+ *                     target_user_id:
+ *                       type: integer
+ *                       example: 6
+ *                     status:
  *                       type: string
- *                       example: "Tracking request accepted successfully"
- *                     tracking_data:
- *                       type: object
- *                       properties:
- *                         tracker_user_id:
- *                           type: integer
- *                           example: 6
- *                         target_user_id:
- *                           type: integer
- *                           example: 7
- *                         status:
- *                           type: string
- *                           example: "accepted"
+ *                       example: "accepted"
  *                 error:
  *                   type: string
  *                   nullable: true
@@ -223,13 +214,13 @@ router.post('/accept', trackingController.acceptTracking.bind(trackingController
  * @swagger
  * /trackers:
  *   get:
- *     summary: Get all trackers
+ *     summary: Get list of trackers for current user
  *     tags: [Tracking]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Successfully retrieved trackers
+ *         description: Successfully retrieved list of trackers
  *         content:
  *           application/json:
  *             schema:
@@ -239,39 +230,55 @@ router.post('/accept', trackingController.acceptTracking.bind(trackingController
  *                   type: string
  *                   example: "success"
  *                 data:
- *                   type: object
- *                   properties:
- *                     message:
- *                       type: string
- *                       example: "Successfully retrieved trackers"
- *                     trackers:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           user_id:
- *                             type: integer
- *                             example: 6
- *                           username:
- *                             type: string
- *                             example: "Khoai"
- *                           email:
- *                             type: string
- *                             example: "lenguyen02312@gmail.com"
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       user_id:
+ *                         type: integer
+ *                         example: 5
+ *                       username:
+ *                         type: string
+ *                         example: "Le Tien Dat"
+ *                       email:
+ *                         type: string
+ *                         example: "taedtech13@gmail.com"
  *                 error:
  *                   type: string
  *                   nullable: true
  *                   example: null
  *       401:
- *         description: Access token is missing
+ *         description: Unauthorized - Missing or invalid token
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 message:
+ *                 status:
  *                   type: string
- *                   example: "Access token is missing"
+ *                   example: "error"
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 data:
+ *                   type: null
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
  */
 router.get('/trackers', trackingController.getTrackers.bind(trackingController))
 

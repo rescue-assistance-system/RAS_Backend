@@ -33,7 +33,7 @@ const swaggerOptions = {
             }
         ]
     },
-    apis: ['./src/routes/*.ts'] // Đường dẫn tới các file định nghĩa API
+    apis: ['./src/routes/*.ts'] 
 }
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions)
