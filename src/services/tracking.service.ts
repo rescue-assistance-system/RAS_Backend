@@ -73,47 +73,25 @@ export class TrackingService {
         }
     }
 
-    public async acceptTracking(verificationCode: string, currentUserId: string) {
+    public async acceptTracking(verificationCode: string, currentUserId: number) {
         try {
             if (!verificationCode) {
                 throw new Error('Verification code is required')
             }
 
-            const keys = await redisClient.keys('tracking_code:*')
-            let trackingData = null
-
-            for (const key of keys) {
-                const data = await redisClient.get(key)
-                if (data) {
-                    const parsedData = JSON.parse(data)
-                    console.log('Checking tracking data:', parsedData)
-                    if (parsedData.verification_code === verificationCode) {
-                        trackingData = parsedData
-                        console.log('Found matching tracking request:', trackingData)
-                        break
-                    }
-                }
-            }
-
-            if (!trackingData) {
+            const user = await User.findOne({ raw: true, where: { tracking_code: verificationCode } })
+            console.log('User found:', user)
+            if (!user) {
                 throw new Error('Invalid or expired verification code')
             }
-            const user = await User.findByPk(trackingData.user_id)
-            if (!user) {
-                throw new Error('User not found')
-            }
 
-            if (trackingData.status !== 'pending') {
-                throw new Error('This tracking request has already been processed')
-            }
-
-            if (currentUserId === trackingData.user_id) {
+            if (Number(currentUserId) === user.id) {
                 throw new Error('A user cannot track themselves')
             }
 
             const existingTracking = await Tracking.findOne({
                 where: {
-                    tracker_user_id: trackingData.user_id,
+                    tracker_user_id: user.id,
                     target_user_id: currentUserId,
                     status: 'accepted'
                 }
@@ -122,28 +100,18 @@ export class TrackingService {
             if (existingTracking) {
                 throw new Error('Already being tracked')
             }
-            trackingData.status = 'accepted'
-            // trackingData.accepted_at = new Date().toISOString()
-            trackingData.tracker_user_id = trackingData.user_id
-            trackingData.target_user_id = currentUserId
 
-            const tracking = Tracking.build(trackingData)
-            await tracking.save()
-            console.log('Tracking data saved to database:', tracking)
-
-            for (const key of keys) {
-                await redisClient.del(key)
-                console.log(`Deleted Redis key: ${key}`)
-            }
+            const newTracking = await Tracking.create({
+                tracker_user_id: user.id,
+                target_user_id: currentUserId,
+                status: 'accepted'
+            })
 
             return {
-                // message: 'Tracking request accepted successfully',
-                //tracking_data: {
-                tracker_user_id: trackingData.tracker_user_id,
-                target_user_id: trackingData.target_user_id,
-                status: trackingData.status
-                // accepted_at: trackingData.accepted_at
-                //}
+                tracker_user_id: newTracking.tracker_user_id,
+                target_user_id: newTracking.target_user_id,
+                status: newTracking.status
+                // accepted_at: newTracking.accepted_at
             }
         } catch (error: any) {
             console.error('Error in acceptTracking:', error)

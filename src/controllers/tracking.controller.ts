@@ -63,6 +63,18 @@ export class TrackingController {
         } catch (error: any) {
             console.error('Error accepting tracking request:', error)
             const errorMessage = error.message || 'Internal server error'
+
+            // Custom handling
+            const knownErrors = [
+                'Failed to accept tracking request: Already being tracked',
+                'Failed to accept tracking request: Invalid or expired verification code',
+                'Verification code is required'
+            ]
+
+            if (knownErrors.includes(errorMessage)) {
+                return res.status(400).json(createResponse('error', null, errorMessage))
+            }
+
             if (errorMessage.includes('database')) {
                 return res.status(500).json(createResponse('error', null, 'Database error occurred'))
             } else if (errorMessage.includes('network')) {
