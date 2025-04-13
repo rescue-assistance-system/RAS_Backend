@@ -8,18 +8,35 @@ import compression from 'compression'
 import redisClient from './configs/redis.config'
 import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './configs/swagger.config'
+import { createServer } from 'http'
+import { createSocketServer } from './configs/socket.config'
+import { SocketService } from './services/socket.service'
 import routes from './routes/index'
-
 import cors from 'cors'
 
 const app: Express = express()
-app.use(cors())
-// Middleware to parse JSON requests
+
+// CORS configuration
+app.use(
+    cors({
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['*']
+    })
+)
+
+// Middleware setup
 app.use(express.json())
 app.use(morgan('dev'))
-app.use(helmet())
+app.use(
+    helmet({
+        crossOriginResourcePolicy: false
+    })
+)
 app.use(compression())
 app.use(express.urlencoded({ extended: true }))
+
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api', routes)
@@ -28,6 +45,24 @@ app.use('/api', routes)
 app.use(errorConverter)
 app.use(errorHandler)
 
+// Create HTTP server from Express app
+const httpServer = createServer(app)
+
+// Initialize Socket.IO
+const io = createSocketServer(httpServer)
+
+// Socket connection logging
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id)
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id)
+    })
+})
+
+const socketService = new SocketService(io)
+
+// Redis Connection
 console.time('Redis Connection')
 redisClient
     .connect()
@@ -40,20 +75,31 @@ redisClient
         console.timeEnd('Redis Connection')
     })
 
-// Start the Auth Service server
-const server: Server = app.listen(config.PORT, () => {
-    console.log(`🚀 Auth Service is running on port ${config.PORT}`)
+// Start the server using httpServer instead of app.listen
+httpServer.listen(config.PORT, () => {
+    console.log(`🚀 Server is running on port ${config.PORT}`)
     console.log(`📄 Swagger Docs available at http://localhost:${config.PORT}/api-docs`)
+    console.log(`🔌 WebSocket server is ready at ws://localhost:${config.PORT}`)
 })
 
 // Graceful shutdown
 const exitHandler = () => {
-    console.log('🔴 Shutting down Auth Service...')
-    server.close(() => {
-        console.info('✅ Auth Service closed')
+    console.log('🔴 Shutting down server...')
+    httpServer.close(() => {
+        io.close(() => {
+            console.log('✅ WebSocket server closed')
+        })
+
+        redisClient.quit().then(() => {
+            console.log('✅ Redis connection closed')
+        })
+
+        console.log('✅ HTTP server closed')
         process.exit(1)
     })
 }
 
 process.on('uncaughtException', exitHandler)
 process.on('unhandledRejection', exitHandler)
+
+export { app, httpServer, io }

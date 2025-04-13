@@ -1,6 +1,7 @@
 // socket.service.ts
 import { Server, Socket } from 'socket.io'
 import redisClient from '../configs/redis.config'
+import { createSocketServer } from '../configs/socket.config'
 
 export class SocketService {
     private io: Server

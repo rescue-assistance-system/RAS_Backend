@@ -1,6 +1,7 @@
 import redisClient from '../configs/redis.config'
 import Tracking from '~/database/models/tracking.model'
 import User from '~/database/models/user.model'
+import { generateTrackingCode } from '~/helpers/trackingCode'
 export class TrackingService {
     public async generateCode(userId: string) {
         try {
@@ -8,25 +9,19 @@ export class TrackingService {
                 throw new Error('User ID is required')
             }
 
-            const verificationCode =
-                Math.random().toString(36).substring(2, 6).toUpperCase() +
-                Math.random().toString(36).substring(2, 6).toUpperCase()
+            const verificationCode = generateTrackingCode()
 
-            const redisKey = `tracking_code:${userId}`
-            const trackingData = {
-                verification_code: verificationCode,
-                generated_at: new Date().toISOString(),
-                status: 'pending',
-                user_id: userId
+            // 🔍 Check if user exists
+            const user = await User.findByPk(userId)
+            if (!user) {
+                throw new Error('User not found')
             }
-            await redisClient.set(
-                redisKey,
-                JSON.stringify(trackingData),
-                { EX: 30 * 60 } // 30 minutes expiration
-            )
+
+            // ✅ Use update method
+            await User.update({ tracking_code: verificationCode }, { where: { id: userId } })
 
             return {
-                // message: 'Tracking request sent successfully',
+                message: 'Tracking code generated and saved successfully',
                 verification_code: verificationCode
             }
         } catch (error: any) {
