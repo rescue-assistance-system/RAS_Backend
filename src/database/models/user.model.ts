@@ -17,6 +17,7 @@ class User extends Model {
     public device_id!: string
     public readonly created_at!: Date
     public readonly updated_at!: Date
+    public tracking_code!: string
 }
 
 User.init(
@@ -79,6 +80,11 @@ User.init(
             defaultValue: true
         },
         device_id: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true
+        },
+        tracking_code: {
             type: DataTypes.STRING,
             allowNull: true,
             unique: true

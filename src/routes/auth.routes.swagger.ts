@@ -243,6 +243,12 @@ router.post('/verify-otp', validateVerifyOTP, authController.verifyOTP)
  *                     refresh_token:
  *                       type: string
  *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                     role:
+ *                      type: string
+ *                      example: user
+ *                     tracking_code:
+ *                      type: string
+ *                      example: abc123
  *                 error:
  *                   type: string
  *                   example: null

@@ -10,6 +10,7 @@ import {
     generateOTPEmailContent,
     generateOTPForgotPassword
 } from '../configs/email.config'
+import { generateTrackingCode } from '~/helpers/trackingCode'
 
 export class AuthService {
     async register(userData: { username: string; email: string; password: string }) {
@@ -61,10 +62,13 @@ export class AuthService {
                 throw new Error('Registration data expired. Please register again.')
             }
 
+            const trackingCode = generateTrackingCode()
+
             const userData = JSON.parse(tempUserData)
+            userData.tracking_code = trackingCode
+
             const user = User.build(userData)
             await user.save()
-            console.log('User created successfully:', user)
 
             redisClient.del(tempUserKey)
             clearOTP(email)
@@ -126,7 +130,8 @@ export class AuthService {
             return {
                 message: 'Login successful.',
                 tokens,
-                role: user.dataValues.role
+                role: user.dataValues.role,
+                tracking_code: user.dataValues.tracking_code
             }
         } catch (error) {
             console.error('Error in login:', error)
