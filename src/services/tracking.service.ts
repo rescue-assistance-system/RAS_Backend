@@ -197,7 +197,9 @@ export class TrackingService {
             }
 
             tracking.status = 'blocked'
-            await tracking.save()
+            tracking.tracking_status = false
+            await tracking.update({ status: 'blocked', tracking_status: false })
+            // await tracking.save()
 
             return { message: 'User blocked successfully' }
         } catch (error: any) {
@@ -221,7 +223,9 @@ export class TrackingService {
             }
 
             tracking.status = 'accepted'
-            await tracking.save()
+            tracking.tracking_status = true
+            await tracking.update({ status: 'accepted', tracking_status: true })    
+            // await tracking.save()
 
             return { message: 'User unblocked successfully' }
         } catch (error: any) {
