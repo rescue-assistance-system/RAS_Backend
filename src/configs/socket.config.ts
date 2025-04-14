@@ -11,7 +11,7 @@ const socketConfig: Partial<ServerOptions> = {
     },
     transports: ['websocket', 'polling'],
     allowEIO3: true,
-    path: '/socket.io/' // Đảm bảo path mặc định
+    path: '/socket.io/'
 }
 
 export function createSocketServer(httpServer: HttpServer): Server {
