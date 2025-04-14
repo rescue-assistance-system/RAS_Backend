@@ -14,6 +14,11 @@ const socketConfig: Partial<ServerOptions> = {
     path: '/socket.io/'
 }
 
+// export function createSocketServer(httpServer: HttpServer): Server {
+//     return new Server(httpServer, socketConfig)
+// }
 export function createSocketServer(httpServer: HttpServer): Server {
-    return new Server(httpServer, socketConfig)
+    const io = new Server(httpServer, socketConfig);
+    console.log('🚀 Socket.IO server initialized');
+    return io;
 }

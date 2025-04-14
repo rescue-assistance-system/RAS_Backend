@@ -571,7 +571,7 @@ router.post('/verify-login-otp', validateVerifyLoginOTP, authController.verifyLo
  *                 error:
  *                   type: string
  *                   example: User not found
- *         500:
+ *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
