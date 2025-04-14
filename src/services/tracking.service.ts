@@ -146,7 +146,8 @@ export class TrackingService {
             const trackerList = trackerList1.map((tracker) => ({
                 user_id: tracker.tracker.id,
                 username: tracker.tracker.username,
-                email: tracker.tracker.email
+                email: tracker.tracker.email,
+                tracking_status: tracker.tracking_status
             }))
             return trackerList
         } catch (error: any) {

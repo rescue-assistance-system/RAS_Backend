@@ -13,6 +13,7 @@ import { createSocketServer } from './configs/socket.config'
 import { SocketService } from './services/socket.service'
 import routes from './routes/index'
 import cors from 'cors'
+import { setupSwagger } from './configs/swagger.config'
 
 const app: Express = express()
 
@@ -40,7 +41,7 @@ app.use(express.urlencoded({ extended: true }))
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api', routes)
-
+setupSwagger(app)
 // Error handling middlewares
 app.use(errorConverter)
 app.use(errorHandler)
