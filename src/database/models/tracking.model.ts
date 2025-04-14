@@ -30,6 +30,11 @@ Tracking.init(
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 'pending'
+        },
+        tracking_status: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: 'true'
         }
     },
     {
