@@ -171,6 +171,23 @@ class AdminController {
             })
         }
     }
+    async getRescueTeamProfileById(req: Request, res: Response) {
+        try {
+            // const rescueTeamId = req.params.id
+            const rescue_team = await rescue_teamService.getRescueTeamProfileById(Number(req.params.id))
+            res.status(200).json({
+                status: 'success',
+                data: rescue_team,
+                error: null
+            })
+        } catch (error: any) {
+            res.status(404).json({
+                status: 'error',
+                data: null,
+                error: error.message
+            })
+        }
+    }
 }
 
 export default new AdminController()

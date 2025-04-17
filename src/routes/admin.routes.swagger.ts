@@ -15,7 +15,7 @@ router.get('/rescue-teams', authorize('admin'), adminController.getRescueTeams)
 router.get('/rescue-teams/:id', authorize('admin'), adminController.getRescueTeamById)
 router.put('/rescue-teams/:id', authorize('admin'), adminController.updateRescueTeam)
 router.delete('/rescue-teams/:id', authorize('admin'), adminController.deleteRescueTeam)
-
+router.get('/rescue-teams/:id/profile', authorize('admin'), adminController.getRescueTeamProfileById)
 // router.post('/news', authorize('admin'), adminController.createNews);
 // router.get('/news', authorize('admin'), adminController.getNews);
 // router.get('/news/:id', authorize('admin'), adminController.getNewsById);
