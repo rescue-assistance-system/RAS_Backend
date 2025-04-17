@@ -4,7 +4,6 @@ import { Op } from 'sequelize'
 import RescueTeam from '~/database/models/rescue_team.model'
 class RescueTeamService {
     async createRescueTeam(data: { username: string; email: string; password: string }) {
-        console.log('Creating Rescue team with data:', data)
         const existingUser = await User.findOne({
             where: {
                 [Op.or]: [{ email: data.email }]
@@ -56,11 +55,7 @@ class RescueTeamService {
             description: data.description
         }
 
-        console.log('Profile data before save:', profileData)
-
         const profile = await RescueTeam.create(profileData)
-
-        console.log('Saved profile:', profile.toJSON())
 
         return profile
     }
@@ -158,7 +153,6 @@ class RescueTeamService {
     }
 
     async deleteRescueTeam(id: string) {
-        console.log('Deleting Rescue team with ID:', id)
         const rescue_team = await User.findOne({
             attributes: { exclude: ['password'] },
             where: { id: id, role: 'rescue_team' }
@@ -169,6 +163,45 @@ class RescueTeamService {
 
         await rescue_team.destroy()
         return { message: 'Rescue team deleted successfully' }
+    }
+    async getRescueTeamProfileById(id: number) {
+        const rescueTeamAccount = await User.findOne({
+            where: { id: id, role: 'rescue_team' }
+        })
+        const rescueTeamProfile = await RescueTeam.findOne({
+            where: { user_id: id },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: { exclude: ['password'] }
+                }
+            ]
+        })
+        if (!rescueTeamProfile) {
+            throw new Error('Rescue team profile not found')
+        }
+
+        return {
+            account_info: {
+                id: rescueTeamAccount?.dataValues.id,
+                username: rescueTeamAccount?.dataValues.username,
+                email: rescueTeamAccount?.dataValues.email,
+                // phone: rescueTeamAccount?.dataValues.phone,
+                role: rescueTeamAccount?.dataValues.role
+            },
+            rescue_team_info: {
+                id: rescueTeamProfile.id,
+                team_name: rescueTeamProfile.team_name,
+                team_members: rescueTeamProfile.team_members,
+                description: rescueTeamProfile.description,
+                is_active: rescueTeamProfile.is_active,
+                default_location: {
+                    latitude: rescueTeamProfile.default_latitude,
+                    longitude: rescueTeamProfile.default_longitude
+                }
+            }
+        }
     }
 }
 

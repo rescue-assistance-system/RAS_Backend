@@ -22,7 +22,7 @@ export const authenticateToken = (req, res, next) => {
         res.status(403).json({ message: 'Invalid or expired token' })
     }
 }
-export const authorize = (requiredRole: string) => {
+export const authorize = (requiredRoles: string[]) => {
     return (req, res, next) => {
         try {
             const token = req.headers.authorization?.split(' ')[1]
@@ -31,10 +31,13 @@ export const authorize = (requiredRole: string) => {
             }
 
             const payload = verifyAccessToken(token)
-            if (payload.role !== requiredRole) {
-                return res.status(403).json({ message: 'Forbidden: Insufficient role' })
+            if (!requiredRoles.includes(payload.role)) {
+                return res.status(403).json({
+                    message: 'Forbidden: Insufficient role',
+                    requiredRoles: requiredRoles,
+                    yourRole: payload.role
+                })
             }
-
             req.user = payload
             next()
         } catch (error) {

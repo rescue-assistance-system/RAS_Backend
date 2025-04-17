@@ -128,7 +128,7 @@ export class TrackingService {
             console.log('Getting trackers for user ID:', userId)
             const trackers = await Tracking.findAll({
                 where: {
-                    target_user_id: userId,
+                    target_user_id: userId
                     // status: 'accepted'
                 },
                 include: [
@@ -224,7 +224,7 @@ export class TrackingService {
 
             tracking.status = 'accepted'
             tracking.tracking_status = true
-            await tracking.update({ status: 'accepted', tracking_status: true })    
+            await tracking.update({ status: 'accepted', tracking_status: true })
             // await tracking.save()
 
             return { message: 'User unblocked successfully' }
