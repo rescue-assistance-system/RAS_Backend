@@ -85,7 +85,8 @@ export class AuthController {
 
     public verifyLoginOTP = async (req: Request, res: Response) => {
         try {
-            const result = await this.authService.verifyLoginOTP(req.body.email, req.body.otp, req.body.device_id)
+            const { email, otp, device_id, fcm_token } = req.body
+            const result = await this.authService.verifyLoginOTP(email, otp, device_id, fcm_token)
             res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error in verifyLoginOTP:', error.message)
