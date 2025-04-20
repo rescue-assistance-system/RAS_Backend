@@ -1,9 +1,10 @@
 import redisClient from '../configs/redis.config'
 import Tracking from '~/database/models/tracking.model'
 import User from '~/database/models/user.model'
+import { FollowingUserDto } from '~/dtos/following-user.dto'
 import { generateTrackingCode } from '~/helpers/trackingCode'
 export class TrackingService {
-    public async generateCode(userId: string) {
+    public async generateCode(userId: number) {
         try {
             if (!userId) {
                 throw new Error('User ID is required')
@@ -119,7 +120,7 @@ export class TrackingService {
         }
     }
 
-    public async getTrackers(userId: string) {
+    public async getTrackers(userId: number) {
         try {
             if (!userId) {
                 throw new Error('User ID is required')
@@ -153,6 +154,45 @@ export class TrackingService {
         } catch (error: any) {
             console.error('Error in getTrackers:', error)
             throw new Error(`Failed to get trackers: ${error.message}`)
+        }
+    }
+
+    public async getYourFollowing(userId: number): Promise<FollowingUserDto[]> {
+        try {
+            if (!userId) {
+                throw new Error('User ID is required')
+            }
+
+            const following = await Tracking.findAll({
+                where: {
+                    tracker_user_id: userId,
+                    status: 'accepted'
+                },
+                include: [
+                    {
+                        model: User,
+                        as: 'target',
+                        attributes: Object.keys(User.getAttributes()),
+                        required: true
+                    }
+                ]
+            })
+
+            const followingList: FollowingUserDto[] = following.map((follow) => {
+                const user = follow.get('target') as User
+                const userJson = user?.toJSON?.() || {}
+                return {
+                    user_id: userJson.id,
+                    username: userJson.username,
+                    latitude: userJson.latitude ?? 0.0,
+                    longitude: userJson.longitude ?? 0.0
+                }
+            })
+
+            return followingList
+        } catch (error: any) {
+            console.error('Error in getYourFollowing:', error)
+            throw new Error(`Failed to get your following list: ${error.message}`)
         }
     }
 

@@ -1,70 +1,80 @@
-// src/services/socket.service.ts
-import { Server, Socket } from 'socket.io'
-import redisClient from '../configs/redis.config'
-// import { LocationService } from './location.service';
+import { User } from '~/database'
+import { LocationRequestDto } from '~/dtos/location-request.dto'
+import { SocketManager } from '~/sockets/SocketManager'
+import { SocketService } from '~/sockets/SocketService'
+import { NotificationService } from './notification.service'
+import { LocationResponseDto } from '~/dtos/location-response.dto'
+import { RedisManager } from '~/middleware/redis.middleware'
 
-export class SocketService {
-    private io: Server
-    // private locationService: LocationService;
-
-    constructor(io: Server) {
-        this.io = io
-        // this.locationService = new LocationService();
-        this.setupSocketHandlers()
-    }
-
-    private setupSocketHandlers(): void {
-        this.io.on('connection', this.handleConnection.bind(this))
-    }
-
-    private async handleConnection(socket: Socket): Promise<void> {
-        console.log('New client connected:', socket.id)
-        socket.on('register', async (data: { userId: string }) => {
-            await this.handleRegister(socket, data)
-        })
-
-        // socket.on('send_location', async (data: {
-        //     userId: string;
-        //     latitude: number;
-        //     longitude: number;
-        // }) => {
-        //     await this.handleLocationUpdate(socket, data);
-        // });
-        socket.on('disconnect', async () => {
-            await this.handleDisconnect(socket)
-        })
-    }
-
-    private async handleRegister(socket: Socket, data: { userId: string }): Promise<void> {
+export class LocationService {
+    public async updateLocation(userId: number, latitude: number, longitude: number) {
         try {
-            const { userId } = data
-            await redisClient.set(`user_socket:${userId}`, socket.id)
-            socket.data.userId = userId
+            // if (!userId || latitude === undefined || longitude === undefined) {
+            //     throw new Error('User ID, latitude, and longitude are required')
+            // }
+            await User.update({ latitude, longitude }, { where: { id: userId } })
 
-            socket.emit('register_response', {
-                status: 'success',
-                message: `Registered for user ${userId}`
-            })
-        } catch (error) {
-            socket.emit('error', { message: 'Registration failed' })
+            console.log(`Location updated for user ${userId}: (${latitude}, ${longitude})`)
+        } catch (error: any) {
+            console.error('Error updating location:', error)
+            throw new Error(`Failed to update location: ${error.message}`)
         }
     }
 
-    // private async handleLocationUpdate(
-    //     socket: Socket,
-    //     data: { userId: string; latitude: number; longitude: number }
-    // ): Promise<void> {
-    //     try {
-    //         await this.locationService.processLocationUpdate(data, this.io);
-    //     } catch (error) {
-    //         socket.emit('error', { message: 'Location update failed' });
-    //     }
-    // }
+    public async sendLocationResponse(data: LocationResponseDto) {
+        try {
+            // Cache the location in redis
+            await RedisManager.setLocationToRedis(data.fromId, data.latitude, data.longitude)
+            console.log(`Location cached for user ${data.fromId}: (${data.latitude}, ${data.longitude})`)
 
-    private async handleDisconnect(socket: Socket): Promise<void> {
-        if (socket.data.userId) {
-            await redisClient.del(`user_socket:${socket.data.userId}`)
+            await SocketService.getInstance().handleLocationResponse(data)
+        } catch (error: any) {
+            throw new Error(`Failed to send location response: ${error.message}`)
         }
-        console.log('Client disconnected:', socket.id)
+    }
+
+    public async askUserLocation(data: LocationRequestDto): Promise<LocationResponseDto | null> {
+        try {
+            const cachedLocation = await RedisManager.getLocationFromRedis(data.toId)
+
+            if (cachedLocation) {
+                const timeDiff = new Date().getTime() - new Date(cachedLocation.timestamp).getTime()
+                const timeLimit = 15 * 1000
+                if (timeDiff < timeLimit) {
+                    console.log(
+                        `User ${data.toId} location is cached: (${cachedLocation.latitude}, ${cachedLocation.longitude})`
+                    )
+
+                    return {
+                        fromId: data.toId,
+                        toId: data.fromId,
+                        latitude: cachedLocation.latitude,
+                        longitude: cachedLocation.longitude
+                    }
+                } else {
+                    console.log(`User ${data.toId} location is cached but expired`)
+                }
+            }
+
+            console.log(`Asking user ${data.toId} for location from user ${data.fromId}`)
+
+            const socketId = await SocketManager.getSocketId(data.toId)
+            if (socketId) {
+                console.log(`User ${data.toId} is online`)
+                SocketService.getInstance().handleAskLocation(data)
+            } else {
+                console.log(`User ${data.toId} is offline, cannot ask for location`)
+                // NotificationService.sendNotification(data.toId, {
+                //     type: 'location_request',
+                //     fromUserId: data.fromId,
+                //     message: `User ${data.fromId} is asking for your location.`
+                // })
+            }
+            // You can also store the request in the database or send a notification
+            return null
+        } catch (error: any) {
+            console.error('Error asking for user location:', error)
+            throw new Error(`Failed to ask for user location: ${error.message}`)
+        }
     }
 }
