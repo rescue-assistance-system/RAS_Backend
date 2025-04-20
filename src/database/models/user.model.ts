@@ -18,6 +18,7 @@ class User extends Model {
     public readonly created_at!: Date
     public readonly updated_at!: Date
     public tracking_code!: string
+    public fcm_token!: string
 }
 
 User.init(

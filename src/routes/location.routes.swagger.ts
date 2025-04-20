@@ -91,7 +91,7 @@ router.post('/update-location', locationController.updateLocation.bind(locationC
  *                 status:
  *                   type: string
  *                   example: success
- *                data:
+ *                 data:
  *                 error:
  *                   type: string
  *                   example: null

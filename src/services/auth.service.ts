@@ -82,7 +82,7 @@ export class AuthService {
         }
     }
 
-    async login(email: string, password: string, device_id: string) {
+    public async login(email: string, password: string, device_id: string, fcm_token: string) {
         try {
             const user = await User.findOne({
                 where: { email }
@@ -111,7 +111,7 @@ export class AuthService {
                 throw new Error('This device is already linked to another account.')
             }
 
-            await user.update({ device_id })
+            await user.update({ device_id, fcm_token })
 
             const tokens = {
                 access_token: generateAccessToken({
@@ -169,7 +169,7 @@ export class AuthService {
         }
     }
 
-    async verifyLoginOTP(email: string, otp: string, device_id: string) {
+    async verifyLoginOTP(email: string, otp: string, device_id: string, fcm_token: string) {
         try {
             const tempUserKey = `otp:${email}`
             const storedData = await redisClient.get(tempUserKey)
@@ -196,8 +196,7 @@ export class AuthService {
                 throw new Error('User not found')
             }
 
-            user.device_id = device_id
-            await user.save()
+            await user.update({ device_id, fcm_token })
 
             await redisClient.del(tempUserKey)
 
@@ -296,6 +295,19 @@ export class AuthService {
             }
         } catch (error) {
             throw new Error('Invalid refresh token')
+        }
+    }
+
+    public async getUserFromToken(userId: number) {
+        try {
+            const user = await User.findByPk(userId)
+            console.log('user', user)
+            if (!user) {
+                throw new Error('User not found')
+            }
+            return user
+        } catch (error) {
+            throw new Error('Invalid token')
         }
     }
 }
