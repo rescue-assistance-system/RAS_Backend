@@ -88,6 +88,11 @@ User.init(
             type: DataTypes.STRING,
             allowNull: true,
             unique: true
+        },
+        fcm_token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true
         }
     },
     {

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { TrackingController } from '../controllers/tracking.controller'
 import { authenticateToken } from '../middleware/auth.middleware'
+import express, { Request, Response } from 'express'
 
 const router = Router()
 const trackingController = new TrackingController()
@@ -575,5 +576,93 @@ router.post('/block', trackingController.blockUser.bind(trackingController))
  *                   example: "Internal server error"
  */
 router.post('/unblock', trackingController.unblockUser.bind(trackingController))
+
+/**
+ * @swagger
+ * /tracking/get-list-following:
+ *   get:
+ *     summary: Get a user's following list
+ *     tags: [Tracking]
+ *     description: Fetches a list of users that the current user is following.
+ *     responses:
+ *       '200':
+ *         description: A list of users the specified user is following
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   description: Response status
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/FollowingUserDto'
+ *                   description: List of following users
+ *                 error:
+ *                   type: string
+ *                   description: Error message, if any
+ *                   example: null
+ *             example:
+ *                   status: success
+ *                   data:
+ *                     - user_id: 1
+ *                       username: "john_doe"
+ *                       latitude: 51.5074
+ *                       longitude: -0.1278
+ *                     - user_id: 2
+ *                       username: "jane_doe"
+ *                       latitude: 48.8566
+ *                       longitude: 2.3522
+ *                   error: null
+ *       '400':
+ *         description: Invalid User ID provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   description: Response status
+ *                   example: error
+ *                 data:
+ *                   type: object
+ *                   description: Empty object when no data is returned
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: User ID is required
+ * components:
+ *   schemas:
+ *     FollowingUserDto:
+ *       type: object
+ *       properties:
+ *         user_id:
+ *           type: integer
+ *           description: The ID of the user being followed
+ *         username:
+ *           type: string
+ *           description: The username of the user being followed
+ *         latitude:
+ *           type: number
+ *           format: float
+ *           nullable: true
+ *           description: Latitude of the user's location
+ *         longitude:
+ *           type: number
+ *           format: float
+ *           nullable: true
+ *           description: Longitude of the user's location
+ *       required:
+ *         - user_id
+ *         - username
+ *         - latitude
+ *         - longitude
+ */
+router.get('/get-list-following', trackingController.getYourFollowing.bind(trackingController))
 
 export default router
