@@ -3,8 +3,7 @@ import bcrypt from 'bcrypt'
 import { Op } from 'sequelize'
 import RescueTeam from '~/database/models/rescue_team.model'
 class RescueTeamService {
-    async createRescueTeam(data: { username: string; email: string; password: string }) {
-        console.log('Creating Rescue team with data:', data)
+    async createRescueTeam(data: { username: string; email: string; password: string; phone: string }) {
         const existingUser = await User.findOne({
             where: {
                 [Op.or]: [{ email: data.email }]
@@ -20,7 +19,8 @@ class RescueTeamService {
             username: data.username,
             email: data.email,
             password: hashedPassword,
-            role: 'rescue_team'
+            role: 'rescue_team',
+            phone: data.phone
         })
 
         return rescue_team
@@ -36,7 +36,9 @@ class RescueTeamService {
         }
     ) {
         const user = await User.findByPk(userId)
-        if (!user || user.role !== 'rescue_team') {
+        console.log(user)
+        console.log(user?.dataValues.role)
+        if (!user || user.dataValues.role !== 'rescue_team') {
             throw new Error('User is not a rescue team')
         }
 
@@ -56,11 +58,7 @@ class RescueTeamService {
             description: data.description
         }
 
-        console.log('Profile data before save:', profileData)
-
         const profile = await RescueTeam.create(profileData)
-
-        console.log('Saved profile:', profile.toJSON())
 
         return profile
     }
@@ -143,7 +141,7 @@ class RescueTeamService {
         return rescue_team
     }
 
-    async updateRescueTeam(id: number, data: { username?: string; email?: string; password?: string }) {
+    async updateRescueTeam(id: number, data: { username?: string; email?: string; password?: string; phone?: string }) {
         const rescue_team = await User.findOne({
             attributes: { exclude: ['password'] },
             where: { id: id, role: 'rescue_team' }
@@ -158,7 +156,6 @@ class RescueTeamService {
     }
 
     async deleteRescueTeam(id: string) {
-        console.log('Deleting Rescue team with ID:', id)
         const rescue_team = await User.findOne({
             attributes: { exclude: ['password'] },
             where: { id: id, role: 'rescue_team' }
@@ -169,6 +166,55 @@ class RescueTeamService {
 
         await rescue_team.destroy()
         return { message: 'Rescue team deleted successfully' }
+    }
+    async getRescueTeamProfileById(id: number) {
+        // Đầu tiên tìm account
+        const rescueTeamAccount = await User.findOne({
+            where: { id: id, role: 'rescue_team' }
+        })
+
+        // Nếu không tìm thấy account
+        if (!rescueTeamAccount) {
+            throw new Error('Rescue team account not found')
+        }
+
+        // Tìm profile (có thể có hoặc không)
+        const rescueTeamProfile = await RescueTeam.findOne({
+            where: { user_id: id },
+            include: [
+                {
+                    model: User,
+                    as: 'user'
+                }
+            ]
+        })
+
+        return {
+            account_info: {
+                id: rescueTeamAccount.dataValues.id,
+                username: rescueTeamAccount.dataValues.username,
+                email: rescueTeamAccount.dataValues.email,
+                password: rescueTeamAccount.dataValues.password,
+                createdAt: rescueTeamAccount.dataValues.createdAt,
+                phone: rescueTeamAccount.dataValues.phone,
+                role: rescueTeamAccount.dataValues.role,
+                deviceId: rescueTeamAccount.dataValues.device_id
+            },
+            rescue_team_info: rescueTeamProfile
+                ? {
+                      id: rescueTeamProfile.id,
+                      team_name: rescueTeamProfile.team_name,
+                      team_members: rescueTeamProfile.team_members,
+                      description: rescueTeamProfile.description,
+                      is_active: rescueTeamProfile.is_active,
+                      default_location: {
+                          latitude: rescueTeamProfile.default_latitude,
+                          longitude: rescueTeamProfile.default_longitude
+                      }
+                  }
+                : null,
+            profile_status: rescueTeamProfile ? 'complete' : 'pending'
+        }
     }
 }
 

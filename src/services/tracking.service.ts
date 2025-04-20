@@ -129,8 +129,8 @@ export class TrackingService {
             console.log('Getting trackers for user ID:', userId)
             const trackers = await Tracking.findAll({
                 where: {
-                    target_user_id: userId,
-                    status: 'accepted'
+                    target_user_id: userId
+                    // status: 'accepted'
                 },
                 include: [
                     {
@@ -226,8 +226,8 @@ export class TrackingService {
         try {
             const tracking = await Tracking.findOne({
                 where: {
-                    tracker_user_id: blockerId,
-                    target_user_id: blockedId,
+                    tracker_user_id: blockedId,
+                    target_user_id: blockerId,
                     status: 'accepted'
                 }
             })
@@ -252,8 +252,8 @@ export class TrackingService {
         try {
             const tracking = await Tracking.findOne({
                 where: {
-                    tracker_user_id: blockerId,
-                    target_user_id: blockedId,
+                    tracker_user_id: blockedId,
+                    target_user_id: blockerId,
                     status: 'blocked'
                 }
             })
