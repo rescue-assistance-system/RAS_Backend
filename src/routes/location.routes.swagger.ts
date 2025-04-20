@@ -46,7 +46,7 @@ router.use(authenticateToken)
  *               example:
  *                 status: success
  *                 data: null
- *                 message: Location updated successfully
+ *                 error: null
  *       400:
  *         description: Thiếu thông tin user hoặc tọa độ
  *         content:
@@ -56,7 +56,7 @@ router.use(authenticateToken)
  *               example:
  *                 status: error
  *                 data: null
- *                 message: User ID, latitude, and longitude are required
+ *                 error: User ID, latitude, and longitude are required
  */
 router.post('/update-location', locationController.updateLocation.bind(locationController))
 
