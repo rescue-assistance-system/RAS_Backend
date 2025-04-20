@@ -190,8 +190,8 @@ router.post('/get-user-info', trackingController.getUserInfoByVerificationCode.b
  *                   type: string
  *                   nullable: true
  *                   example: null
- *       500:
- *         description: Invalid or expired verification code
+ *       400:
+ *         description: Bad request due to validation error
  *         content:
  *           application/json:
  *             schema:
@@ -206,7 +206,43 @@ router.post('/get-user-info', trackingController.getUserInfoByVerificationCode.b
  *                   example: null
  *                 error:
  *                   type: string
- *                   example: "Failed to accept tracking request: Invalid or expired verification code"
+ *                   enum:
+ *                     - "Verification code is required"
+ *                     - "Failed to accept tracking request: Invalid or expired verification code"
+ *       409:
+ *         description: Conflict - User is already being tracked
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 data:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to accept tracking request: Already being tracked"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 data:
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
+ *                 error:
+ *                   type: string
+ *                   example: "Database error occurred"
  */
 router.post('/accept', trackingController.acceptTracking.bind(trackingController))
 
@@ -243,6 +279,9 @@ router.post('/accept', trackingController.acceptTracking.bind(trackingController
  *                       email:
  *                         type: string
  *                         example: "taedtech13@gmail.com"
+ *                       tracking_status:
+ *                         type: boolean
+ *                         example: true
  *                 error:
  *                   type: string
  *                   nullable: true

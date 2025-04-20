@@ -93,7 +93,7 @@ User.init(
     {
         sequelize,
         modelName: 'User',
-        tableName: 'accounts',
+        tableName: 'accounts_ras_sys',
         timestamps: true,
         underscored: true
     }

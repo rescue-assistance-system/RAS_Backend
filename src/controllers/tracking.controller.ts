@@ -12,7 +12,6 @@ export class TrackingController {
     public generateCode = async (req: Request, res: Response) => {
         try {
             const userId = req.user?.user_id
-            console.log('Current authenticated user:', userId)
 
             if (!userId) {
                 return res.status(400).json(createResponse('error', null, 'User ID is required'))
@@ -46,23 +45,30 @@ export class TrackingController {
         try {
             const { verification_code } = req.body
             const currentUserId = req.user?.user_id
-            console.log('Current authenticated user accepting tracking:', currentUserId)
 
             if (!verification_code) {
                 return res.status(400).json(createResponse('error', null, 'Verification code is required'))
             }
-
-            console.log('Current authenticated user accepting tracking:', {
-                user_id: currentUserId,
-                device_id: req.user?.device_id,
-                verification_code
-            })
-
             const result = await this.trackingService.acceptTracking(verification_code, currentUserId)
             return res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error accepting tracking request:', error)
             const errorMessage = error.message || 'Internal server error'
+
+            // Custom handling
+            const knownErrors = [
+                'Failed to accept tracking request: Invalid or expired verification code',
+                'Verification code is required'
+            ]
+
+            if (errorMessage === 'Failed to accept tracking request: Already being tracked') {
+                return res.status(409).json(createResponse('error', null, errorMessage))
+            }
+
+            if (knownErrors.includes(errorMessage)) {
+                return res.status(400).json(createResponse('error', null, errorMessage))
+            }
+
             if (errorMessage.includes('database')) {
                 return res.status(500).json(createResponse('error', null, 'Database error occurred'))
             } else if (errorMessage.includes('network')) {
@@ -80,11 +86,6 @@ export class TrackingController {
             if (!userId) {
                 return res.status(400).json(createResponse('error', null, 'User ID is required'))
             }
-
-            console.log('Current authenticated user:', {
-                user_id: userId,
-                device_id: req.user?.device_id
-            })
 
             const result = await this.trackingService.getTrackers(userId)
             return res.status(200).json(createResponse('success', result))
