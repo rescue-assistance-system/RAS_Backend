@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { TrackingService } from '../services/tracking.service'
 import { createResponse } from '../utils/response.utils'
+import { handleApiError } from '~/middleware/ErrorHandler'
 
 export class TrackingController {
     private trackingService: TrackingService
@@ -46,8 +47,8 @@ export class TrackingController {
             const { verification_code } = req.body
             const currentUserId = req.user?.user_id
 
-            if (!verification_code) {
-                return res.status(400).json(createResponse('error', null, 'Verification code is required'))
+            if (!verification_code || !currentUserId) {
+                return res.status(400).json(createResponse('error', null, 'UserId or Verification code is required'))
             }
             const result = await this.trackingService.acceptTracking(verification_code, currentUserId)
             return res.status(200).json(createResponse('success', result))
@@ -99,6 +100,21 @@ export class TrackingController {
             } else {
                 return res.status(500).json(createResponse('error', null, errorMessage))
             }
+        }
+    }
+
+    public getYourFollowing = async (req: Request, res: Response) => {
+        try {
+            const userId = req.user?.user_id
+
+            if (!userId) {
+                return res.status(400).json(createResponse('error', null, 'User ID is required'))
+            }
+
+            const result = await this.trackingService.getYourFollowing(userId)
+            return res.status(200).json(createResponse('success', result))
+        } catch (error: any) {
+            return handleApiError(res, error, 'Error getting your following:')
         }
     }
 

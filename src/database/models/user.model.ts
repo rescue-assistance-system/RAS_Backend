@@ -88,12 +88,17 @@ User.init(
             type: DataTypes.STRING,
             allowNull: true,
             unique: true
+        },
+        fcm_token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true
         }
     },
     {
         sequelize,
         modelName: 'User',
-        tableName: 'accounts',
+        tableName: 'accounts_ras_sys',
         timestamps: true,
         underscored: true
     }

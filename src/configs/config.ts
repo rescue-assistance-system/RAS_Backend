@@ -8,6 +8,7 @@ console.log(`✅ Loaded environment variables from ${configFile}`)
 
 const {
     PORT,
+    SOCKET_PORT,
     JWT_SECRET,
     NODE_ENV,
     MESSAGE_BROKER_URL,
@@ -21,6 +22,7 @@ const {
 
 const appConfig = {
     PORT,
+    SOCKET_PORT,
     JWT_SECRET,
     env: NODE_ENV,
     msgBrokerURL: MESSAGE_BROKER_URL,
