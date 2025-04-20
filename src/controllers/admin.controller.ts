@@ -188,6 +188,25 @@ class AdminController {
             })
         }
     }
+    async getPaginatedRescueTeams(req: Request, res: Response) {
+        try {
+            const { page = 1, limit = 10, search } = req.query
+            console.log(page, limit, search)
+            const rescueTeams = await rescue_teamService.getPaginatedRescueTeams(Number(page), Number(limit), search as string)
+            console.log(rescueTeams)
+            res.status(200).json({
+                status: 'success',
+                data: rescueTeams,
+                error: null
+            })
+        } catch (error: any) {
+            res.status(500).json({
+                status: 'error',
+                data: null,     
+                error: error.message
+            })
+        }
+    }
 }
 
 export default new AdminController()

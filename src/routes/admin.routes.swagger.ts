@@ -16,6 +16,8 @@ router.get('/rescue-teams/:id', authorize('admin'), adminController.getRescueTea
 router.put('/rescue-teams/:id', authorize('admin'), adminController.updateRescueTeam)
 router.delete('/rescue-teams/:id', authorize('admin'), adminController.deleteRescueTeam)
 router.get('/rescue-teams/:id/profile', authorize('admin'), adminController.getRescueTeamProfileById)
+router.get('/rescue-teams/paginated', authorize('admin'), adminController.getPaginatedRescueTeams)
+
 // router.post('/news', authorize('admin'), adminController.createNews);
 // router.get('/news', authorize('admin'), adminController.getNews);
 // router.get('/news/:id', authorize('admin'), adminController.getNewsById);
@@ -33,3 +35,4 @@ router.get('/rescue-teams/:id/profile', authorize('admin'), adminController.getR
 // router.get('/statistics/activities', authorize('admin'), adminController.getActivityStatistics);
 
 export default router
+

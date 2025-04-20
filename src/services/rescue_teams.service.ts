@@ -216,6 +216,33 @@ class RescueTeamService {
             profile_status: rescueTeamProfile ? 'complete' : 'pending'
         }
     }
+    async getPaginatedRescueTeams(page: number, limit: number, search?: string): Promise<any> {
+        const offset = (page - 1) * limit
+        console.log(offset)
+
+        const where = search
+            ? {
+                  name: {
+                      [Op.iLike]: `%${search}%` // case-insensitive search
+                  }
+              }
+            : {}
+
+        const { count: totalItems, rows: items } = await RescueTeam.findAndCountAll({
+            where,
+            offset,
+            limit,
+            order: [['createdAt', 'DESC']]
+        })
+        console.log(totalItems)
+        console.log(items)
+        return {
+            currentPage: page,
+            totalPages: Math.ceil(totalItems / limit),
+            totalItems,
+            items
+        }
+    }
 }
 
 export default new RescueTeamService()
