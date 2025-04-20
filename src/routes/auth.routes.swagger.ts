@@ -11,7 +11,7 @@ import {
     validateRefreshToken,
     validateLogout
 } from '../middleware/validation.middleware'
-import { authorize } from '../middleware/auth.middleware'
+import { authenticateToken, authorize } from '../middleware/auth.middleware'
 
 const router = Router()
 const authController = new AuthController()
@@ -718,6 +718,7 @@ router.post('/refresh-token', validateRefreshToken, authController.refreshToken)
  */
 router.post('/logout', validateLogout, authController.logout)
 
+router.get('/get-fcm-token', authenticateToken, authController.getUserFCMToken)
 /**
  * @swagger
  * /auth/debug-redis:

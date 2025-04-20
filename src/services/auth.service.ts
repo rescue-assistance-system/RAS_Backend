@@ -82,7 +82,7 @@ export class AuthService {
         }
     }
 
-    async login(email: string, password: string, device_id: string) {
+    public async login(email: string, password: string, device_id: string, fcm_token: string) {
         try {
             const user = await User.findOne({
                 where: { email }
@@ -296,6 +296,19 @@ export class AuthService {
             }
         } catch (error) {
             throw new Error('Invalid refresh token')
+        }
+    }
+
+    public async getUserFromToken(userId: number) {
+        try {
+            const user = await User.findByPk(userId)
+            console.log('user', user)
+            if (!user) {
+                throw new Error('User not found')
+            }
+            return user
+        } catch (error) {
+            throw new Error('Invalid token')
         }
     }
 }
