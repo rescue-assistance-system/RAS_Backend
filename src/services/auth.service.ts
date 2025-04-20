@@ -111,8 +111,7 @@ export class AuthService {
                 throw new Error('This device is already linked to another account.')
             }
 
-            user.dataValues.device_id = device_id
-            await user.save()
+            await user.update({ device_id })
 
             const tokens = {
                 access_token: generateAccessToken({
