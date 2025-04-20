@@ -2,6 +2,7 @@ import User from '../database/models/user.model'
 import bcrypt from 'bcrypt'
 import { Op } from 'sequelize'
 import RescueTeam from '~/database/models/rescue_team.model'
+import { formatPaginatedData, getPagination } from '~/utils/pagination'
 class RescueTeamService {
     async createRescueTeam(data: { username: string; email: string; password: string; phone: string }) {
         const existingUser = await User.findOne({
@@ -216,32 +217,28 @@ class RescueTeamService {
             profile_status: rescueTeamProfile ? 'complete' : 'pending'
         }
     }
-    async getPaginatedRescueTeams(page: number, limit: number, search?: string): Promise<any> {
-        const offset = (page - 1) * limit
-        console.log(offset)
+    async getPaginatedRescueTeams(page: number, limit: number, search: string) {
+        const { offset, limit: safeLimit, page: safePage } = getPagination(page, limit)
 
-        const where = search
-            ? {
-                  name: {
-                      [Op.iLike]: `%${search}%` // case-insensitive search
-                  }
-              }
-            : {}
+        const where = {
+            role: 'rescue_team',
+            ...(search && {
+                [Op.or]: [
+                    { username: { [Op.iLike]: `%${search}%` } },
+                    { email: { [Op.iLike]: `%${search}%` } },
+                    { phone: { [Op.iLike]: `%${search}%` } }
+                ]
+            })
+        }
 
-        const { count: totalItems, rows: items } = await RescueTeam.findAndCountAll({
+        const { count, rows } = await User.findAndCountAll({
             where,
             offset,
-            limit,
-            order: [['createdAt', 'DESC']]
+            limit: safeLimit,
+            order: [['created_at', 'DESC']]
         })
-        console.log(totalItems)
-        console.log(items)
-        return {
-            currentPage: page,
-            totalPages: Math.ceil(totalItems / limit),
-            totalItems,
-            items
-        }
+
+        return formatPaginatedData(count, rows, safePage, safeLimit)
     }
 }
 
