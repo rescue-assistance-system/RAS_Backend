@@ -49,4 +49,9 @@ Tracking.belongsTo(User, {
     as: 'tracker'
 })
 
+Tracking.belongsTo(User, {
+    foreignKey: 'target_user_id',
+    as: 'target'
+})
+
 export default Tracking

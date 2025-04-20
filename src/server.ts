@@ -10,9 +10,11 @@ import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './configs/swagger.config'
 import { createServer } from 'http'
 import { createSocketServer } from './configs/socket.config'
-import { SocketService } from './services/socket.service'
+// import { SocketService } from './services/socket.service'
 import routes from './routes/index'
 import cors from 'cors'
+import { SocketService } from './sockets/SocketService'
+import { setupSocketIO } from './sockets'
 
 const app: Express = express()
 
@@ -52,15 +54,15 @@ const httpServer = createServer(app)
 const io = createSocketServer(httpServer)
 
 // Socket connection logging
-io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id)
+// io.on('connection', (socket) => {
+//     console.log('Client connected:', socket.id)
 
-    socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id)
-    })
-})
+//     socket.on('disconnect', () => {
+//         console.log('Client disconnected:', socket.id)
+//     })
+// })
 
-const socketService = new SocketService(io)
+const socketService = setupSocketIO(io)
 
 // Redis Connection
 console.time('Redis Connection')
@@ -83,8 +85,9 @@ httpServer.listen(config.PORT, () => {
 })
 
 // Graceful shutdown
-const exitHandler = () => {
+const exitHandler = (err) => {
     console.log('🔴 Shutting down server...')
+    console.log('error: ', err)
     httpServer.close(() => {
         io.close(() => {
             console.log('✅ WebSocket server closed')
