@@ -192,4 +192,19 @@ export class AuthController {
             res.status(500).json(createResponse('error', null, 'Internal server error'))
         }
     }
+
+    public updateFCMToken = async (req: Request, res: Response) => {
+        try {
+            const userId = req.user?.user_id
+            const fcmToken = req.body.fcm_token
+            if (!userId || !fcmToken) {
+                return res.status(400).json(createResponse('error', null, 'User ID and FCM token are required'))
+            }
+            await this.authService.updateFCMToken(userId, fcmToken)
+            res.status(200).json(createResponse('success', null, 'FCM token updated successfully'))
+        } catch (error: any) {
+            console.error('Error in updateFCMToken:', error.message)
+            res.status(500).json(createResponse('error', null, 'Internal server error'))
+        }
+    }
 }

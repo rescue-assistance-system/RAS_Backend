@@ -719,6 +719,7 @@ router.post('/refresh-token', validateRefreshToken, authController.refreshToken)
 router.post('/logout', validateLogout, authController.logout)
 
 router.get('/get-fcm-token', authenticateToken, authController.getUserFCMToken)
+router.post('/update-fcm-token', authenticateToken, authController.updateFCMToken)
 /**
  * @swagger
  * /auth/debug-redis:
