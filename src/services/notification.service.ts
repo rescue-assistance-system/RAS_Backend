@@ -1,4 +1,5 @@
 import { firebaseAdmin } from '~/configs/firebase.config'
+import User from '~/database/models/user.model'
 
 interface NotificationData {
     [key: string]: string | number | boolean
@@ -21,6 +22,20 @@ export class NotificationService {
             return response
         } catch (error) {
             console.error('Error sending message:', error)
+            throw error
+        }
+    }
+
+    async getDeviceToken(userId: number): Promise<string | null> {
+        try {
+            const user = await User.findByPk(userId)
+            if (!user) {
+                console.error('User not found')
+                return null
+            }
+            return user.fcm_token
+        } catch (error) {
+            console.error('Error fetching device token:', error)
             throw error
         }
     }

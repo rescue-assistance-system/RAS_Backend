@@ -43,8 +43,9 @@ export class AuthController {
     }
 
     public login = async (req: Request, res: Response) => {
+        const { email, password, device_id, fcm_token } = req.body
         try {
-            const result = await this.authService.login(req.body.email, req.body.password, req.body.device_id)
+            const result = await this.authService.login(email, password, device_id, fcm_token)
             res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error in login:', error.message)
@@ -84,7 +85,8 @@ export class AuthController {
 
     public verifyLoginOTP = async (req: Request, res: Response) => {
         try {
-            const result = await this.authService.verifyLoginOTP(req.body.email, req.body.otp, req.body.device_id)
+            const { email, otp, device_id, fcm_token } = req.body
+            const result = await this.authService.verifyLoginOTP(email, otp, device_id, fcm_token)
             res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error in verifyLoginOTP:', error.message)
@@ -173,6 +175,20 @@ export class AuthController {
             )
         } catch (error: any) {
             console.error('Error in debugRedis:', error)
+            res.status(500).json(createResponse('error', null, 'Internal server error'))
+        }
+    }
+
+    public getUserFCMToken = async (req: Request, res: Response) => {
+        try {
+            const userId = req.user?.user_id
+            if (!userId) {
+                return res.status(400).json(createResponse('error', null, 'User ID is required'))
+            }
+            const fcmToken = await this.authService.getUserFromToken(userId)
+            res.status(200).json(createResponse('success', { fcmToken }))
+        } catch (error: any) {
+            console.error('Error in getUserFCMToken:', error.message)
             res.status(500).json(createResponse('error', null, 'Internal server error'))
         }
     }

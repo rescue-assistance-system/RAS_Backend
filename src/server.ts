@@ -85,7 +85,7 @@ httpServer.listen(config.PORT, () => {
 })
 
 // Graceful shutdown
-const exitHandler = (err) => {
+const exitHandler = (err: any) => {
     console.log('🔴 Shutting down server...')
     console.log('error: ', err)
     httpServer.close(() => {
