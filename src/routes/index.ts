@@ -7,6 +7,7 @@ import rescueTeamRoutes from './rescue_team.routes'
 import trackingRoutes from './tracking.routes.swagger'
 import newsCategoryRoutes from './news_category.routes'
 import firstAidCategoryRoutes from './first_aid_category.routes'
+import firstAidGuideRoutes from './first_aid_guide.routes'
 import newsRoutes from './news.routes'
 import locationRoutes from './location.routes.swagger'
 
@@ -22,4 +23,5 @@ router.use('/location', locationRoutes)
 router.use('/news-categories', newsCategoryRoutes)
 router.use('/news', newsRoutes)
 router.use('/first-aid-categories', firstAidCategoryRoutes)
+router.use('/first-aid-guides', firstAidGuideRoutes)
 export default router

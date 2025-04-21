@@ -2,6 +2,7 @@ import User from '../database/models/user.model'
 import bcrypt from 'bcrypt'
 import { Op } from 'sequelize'
 import RescueTeam from '~/database/models/rescue_team.model'
+import { formatPaginatedData, getPagination } from '~/utils/pagination'
 class RescueTeamService {
     async createRescueTeam(data: { username: string; email: string; password: string; phone: string }) {
         const existingUser = await User.findOne({
@@ -215,6 +216,29 @@ class RescueTeamService {
                 : null,
             profile_status: rescueTeamProfile ? 'complete' : 'pending'
         }
+    }
+    async getPaginatedRescueTeams(page: number, limit: number, search: string) {
+        const { offset, limit: safeLimit, page: safePage } = getPagination(page, limit)
+
+        const where = {
+            role: 'rescue_team',
+            ...(search && {
+                [Op.or]: [
+                    { username: { [Op.iLike]: `%${search}%` } },
+                    { email: { [Op.iLike]: `%${search}%` } },
+                    { phone: { [Op.iLike]: `%${search}%` } }
+                ]
+            })
+        }
+
+        const { count, rows } = await User.findAndCountAll({
+            where,
+            offset,
+            limit: safeLimit,
+            order: [['created_at', 'DESC']]
+        })
+
+        return formatPaginatedData(count, rows, safePage, safeLimit)
     }
 }
 
