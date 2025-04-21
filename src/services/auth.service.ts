@@ -310,4 +310,19 @@ export class AuthService {
             throw new Error('Invalid token')
         }
     }
+
+    public async updateFCMToken(userId: number, fcm_token: string) {
+        try {
+            const user = await User.findByPk(userId)
+            if (!user) {
+                throw new Error('User not found')
+            }
+            await user.update({ fcm_token })
+            return {
+                message: 'FCM token updated successfully'
+            }
+        } catch (error) {
+            throw new Error('Error updating FCM token')
+        }
+    }
 }

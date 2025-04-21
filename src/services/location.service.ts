@@ -64,11 +64,7 @@ export class LocationService {
                 SocketService.getInstance().handleAskLocation(data)
             } else {
                 console.log(`User ${data.toId} is offline, cannot ask for location`)
-                // NotificationService.sendNotification(data.toId, {
-                //     type: 'location_request',
-                //     fromUserId: data.fromId,
-                //     message: `User ${data.fromId} is asking for your location.`
-                // })
+                new NotificationService().handleAskLocation(data)
             }
             // You can also store the request in the database or send a notification
             return null
