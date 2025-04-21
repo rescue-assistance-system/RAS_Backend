@@ -36,37 +36,16 @@ export class TrackingService {
                 throw new Error('Verification code is required')
             }
 
-            const keys = await redisClient.keys('tracking_code:*')
-            let trackingData = null
-
-            for (const key of keys) {
-                const data = await redisClient.get(key)
-                if (data) {
-                    const parsedData = JSON.parse(data)
-                    if (parsedData.verification_code === verificationCode) {
-                        trackingData = parsedData
-                        break
-                    }
-                }
-            }
-
-            if (!trackingData) {
-                throw new Error('Invalid or expired verification code')
-            }
-
-            if (trackingData.status !== 'pending') {
-                throw new Error('This tracking request has already been processed')
-            }
-
-            const user = await User.findByPk(trackingData.user_id)
+            const user = await User.findOne({ where: { tracking_code: verificationCode, role: 'user' } })
             if (!user) {
-                throw new Error('User not found')
+                throw new Error('Invalid or expired verification code')
             }
 
             return {
                 user_id: user.dataValues.id,
                 username: user.dataValues.username,
-                email: user.dataValues.email
+                email: user.dataValues.email,
+                role: user.dataValues.role
             }
         } catch (error: any) {
             console.error('Error in getUserInfoByVerificationCode:', error)
