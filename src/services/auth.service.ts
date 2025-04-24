@@ -130,7 +130,10 @@ export class AuthService {
                 message: 'Login successful.',
                 tokens,
                 role: user.dataValues.role,
-                tracking_code: user.dataValues.tracking_code
+                tracking_code: user.dataValues.tracking_code,
+                fullName: user.dataValues.username,
+                email: user.dataValues.email,
+                avatar: user.dataValues.avatar
             }
         } catch (error) {
             console.error('Error in login:', error)
@@ -203,17 +206,24 @@ export class AuthService {
             const tokens = {
                 access_token: generateAccessToken({
                     user_id: user.dataValues.id,
-                    device_id: user.dataValues.device_id
+                    device_id: user.dataValues.device_id,
+                    role: user.dataValues.role
                 }),
                 refresh_token: generateRefreshToken({
-                    user_id: user.dataValues.id,
-                    device_id: user.dataValues.device_id
+                    user_id: user.id,
+                    device_id: user.dataValues.device_id,
+                    role: user.dataValues.role
                 })
             }
 
             return {
                 message: 'Login verified successfully',
-                ...tokens
+                tokens,
+                role: user.dataValues.role,
+                tracking_code: user.dataValues.tracking_code,
+                fullName: user.dataValues.username,
+                email: user.dataValues.email,
+                avatar: user.dataValues.avatar
             }
         } catch (error) {
             console.error('Error in verifyLoginOTP:', error)
