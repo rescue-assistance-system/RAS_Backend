@@ -19,6 +19,7 @@ class User extends Model {
     public readonly updated_at!: Date
     public tracking_code!: string
     public fcm_token!: string
+    public avatar!: string
 }
 
 User.init(
@@ -91,6 +92,11 @@ User.init(
             unique: true
         },
         fcm_token: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true
+        },
+        avatar: {
             type: DataTypes.STRING,
             allowNull: true,
             unique: true
