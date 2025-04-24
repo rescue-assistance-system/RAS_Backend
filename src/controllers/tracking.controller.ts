@@ -112,6 +112,7 @@ export class TrackingController {
             }
 
             const result = await this.trackingService.getYourFollowing(userId)
+            console.log('Your following:', result) // Debugging line
             return res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             return handleApiError(res, error, 'Error getting your following:')
