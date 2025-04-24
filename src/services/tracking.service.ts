@@ -185,7 +185,9 @@ export class TrackingService {
                     user_id: userJson.id,
                     username: userJson.username,
                     latitude: userJson.latitude ?? 0.0,
-                    longitude: userJson.longitude ?? 0.0
+                    longitude: userJson.longitude ?? 0.0,
+                    avatar: userJson.avatar ?? null,
+                    tracking_status: Boolean(follow.get('tracking_status') ?? false)
                 }
             })
 
