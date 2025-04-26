@@ -62,24 +62,19 @@ router.post('/update-location', locationController.updateLocation.bind(locationC
 
 /**
  * @swagger
- * /location/ask-user-location:
- *   post:
+ * /location/ask-user-location/{toUserId}:
+ *   get:
  *     summary: Request another user to share their location
  *     tags:
  *       - Location
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - toUserId
- *             properties:
- *               toUserId:
- *                 type: number
- *                 description: The user ID of the person being asked for location
- *                 example: 12345
+ *     parameters:
+ *       - name: toUserId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: The user ID of the person being asked for location
+ *         example: 12345
  *     responses:
  *       200:
  *         description: Ask location request sent successfully
@@ -92,6 +87,7 @@ router.post('/update-location', locationController.updateLocation.bind(locationC
  *                   type: string
  *                   example: success
  *                 data:
+ *                   type: object
  *                 error:
  *                   type: string
  *                   example: null
@@ -109,7 +105,7 @@ router.post('/update-location', locationController.updateLocation.bind(locationC
  *                   type: string
  *                   example: User ID, toUserId are required
  */
-router.post('/ask-user-location', locationController.askUserLocation.bind(locationController))
+router.get('/ask-user-location/:toUserId', locationController.askUserLocation.bind(locationController))
 
 /**
  * @swagger

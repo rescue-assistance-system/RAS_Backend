@@ -30,7 +30,7 @@ export class LocationController {
     public async askUserLocation(req: Request, res: Response) {
         try {
             const userId = req.user?.user_id?.toString()
-            const toUserId = req.body.toUserId?.toString()
+            const toUserId = req.params.toUserId?.toString()
 
             if (!userId || !toUserId) {
                 return res.status(400).json(createResponse('error', null, 'User ID, toUserId are required'))
