@@ -1,4 +1,4 @@
-import FirstAidCategory from '../database/models/first_aid_category.model'
+import FirstAidCategory from '../../database/models/first_aid_category.model'
 
 export class FirstAidCategoryService {
     async getAllFirstAidCategories() {

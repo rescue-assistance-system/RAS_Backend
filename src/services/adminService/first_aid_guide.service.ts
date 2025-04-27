@@ -1,4 +1,4 @@
-import FirstAidGuide from '../database/models/first_aid_guide.model'
+import FirstAidGuide from '../../database/models/first_aid_guide.model'
 
 export class FirstAidGuideService {
     async getAllFirstAidGuides() {

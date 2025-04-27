@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import coordinatorService from '../services/coordinator.service'
-import rescue_teamService from '../services/rescue_teams.service'
+import coordinatorService from '../../services/adminService/coordinator.service'
+import rescue_teamService from '../../services/rescue_teams.service'
 import { getSearchString } from '~/helpers/pagination'
 class AdminController {
     async createCoordinator(req: Request, res: Response) {

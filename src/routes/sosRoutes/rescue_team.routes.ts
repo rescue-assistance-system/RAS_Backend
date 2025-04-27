@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import rescueTeamController from '../controllers/rescue_team.controller'
-import { authorize } from '../middleware/auth.middleware'
+import rescueTeamController from '../../controllers/adminController/rescue_team.controller'
+import { authorize } from '../../middleware/auth.middleware'
 
 const router = Router()
 

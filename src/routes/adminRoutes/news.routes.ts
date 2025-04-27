@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { NewsController } from '../controllers/news.controller'
+import { NewsController } from '../../controllers/adminController/news.controller'
 
 import { authorize } from '~/middleware/auth.middleware'
 

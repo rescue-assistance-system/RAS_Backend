@@ -1,5 +1,5 @@
 import { Op } from 'sequelize'
-import News from '../database/models/news.model'
+import News from '../../database/models/news.model'
 
 export class NewsService {
     async getAllNews() {

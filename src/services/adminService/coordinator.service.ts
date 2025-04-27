@@ -1,4 +1,4 @@
-import User from '../database/models/user.model'
+import User from '../../database/models/user.model'
 import bcrypt from 'bcrypt'
 import { Op } from 'sequelize'
 class CoordinatorService {
