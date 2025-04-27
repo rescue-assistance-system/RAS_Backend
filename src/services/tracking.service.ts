@@ -1,3 +1,4 @@
+import redisClient from '../configs/redis.config'
 import Tracking from '~/database/models/tracking.model'
 import User from '~/database/models/user.model'
 import { FollowingUserDto } from '~/dtos/following-user.dto'

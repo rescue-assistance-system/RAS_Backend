@@ -1,4 +1,5 @@
 import express, { Express } from 'express'
+import { Server } from 'http'
 import { errorConverter, errorHandler } from './middleware'
 import config from './configs/config'
 import morgan from 'morgan'
@@ -8,12 +9,12 @@ import redisClient from './configs/redis.config'
 import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './configs/swagger.config'
 import { createServer } from 'http'
+import { createSocketServer } from './configs/socket.config'
+// import { SocketService } from './services/socket.service'
 import routes from './routes/index'
 import cors from 'cors'
+import { SocketService } from './sockets/SocketService'
 import { setupSocketIO } from './sockets'
-import { Server } from 'socket.io'
-import path from 'path'
-import { setupSOSRoutes } from './routes/sosRoutes/sos.routes'
 
 const app: Express = express()
 
@@ -38,27 +39,30 @@ app.use(
 app.use(compression())
 app.use(express.urlencoded({ extended: true }))
 
-app.use(express.static(path.join(__dirname, 'public')))
-
-// Create HTTP server
-const httpServer = createServer(app)
-
-// Initialize Socket.IO
-const io = new Server(httpServer, {
-    cors: { origin: '*' },
-    pingTimeout: 60000, // 60 seconds
-    pingInterval: 25000 // 25 seconds
-})
-const socketService = setupSocketIO(io)
-
-// API routes
+// Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api', routes)
-app.use('/api/sos', setupSOSRoutes(io))
 
 // Error handling middlewares
 app.use(errorConverter)
 app.use(errorHandler)
+
+// Create HTTP server from Express app
+const httpServer = createServer(app)
+
+// Initialize Socket.IO
+const io = createSocketServer(httpServer)
+
+// Socket connection logging
+// io.on('connection', (socket) => {
+//     console.log('Client connected:', socket.id)
+
+//     socket.on('disconnect', () => {
+//         console.log('Client disconnected:', socket.id)
+//     })
+// })
+
+const socketService = setupSocketIO(io)
 
 // Redis Connection
 console.time('Redis Connection')
@@ -73,7 +77,7 @@ redisClient
         console.timeEnd('Redis Connection')
     })
 
-// Start the server
+// Start the server using httpServer instead of app.listen
 httpServer.listen(config.PORT, () => {
     console.log(`🚀 Server is running on port ${config.PORT}`)
     console.log(`📄 Swagger Docs available at http://localhost:${config.PORT}/api-docs`)
