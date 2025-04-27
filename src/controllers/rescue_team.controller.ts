@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import rescueTeamService from '../../services/rescue_teams.service'
-import { createResponse } from '../../utils/response.utils'
+import rescueTeamService from '../services/rescue_teams.service'
+import { createResponse } from '../utils/response.utils'
 
 class RescueTeamController {
     async createProfile(req: Request, res: Response) {

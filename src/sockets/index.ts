@@ -6,5 +6,3 @@ export const setupSocketIO = (io: Server) => {
     socketService.initialize(io)
     return socketService
 }
-
-export * from '../types/socket.types'

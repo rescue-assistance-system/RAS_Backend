@@ -43,17 +43,9 @@ export class AuthController {
     }
 
     public login = async (req: Request, res: Response) => {
-        const { email, password, device_id, fcm_token, socket_id, latitude, longitude } = req.body
+        const { email, password, device_id, fcm_token } = req.body
         try {
-            const result = await this.authService.login(
-                email,
-                password,
-                device_id,
-                fcm_token,
-                socket_id,
-                latitude,
-                longitude
-            )
+            const result = await this.authService.login(email, password, device_id, fcm_token)
             res.status(200).json(createResponse('success', result))
         } catch (error: any) {
             console.error('Error in login:', error.message)

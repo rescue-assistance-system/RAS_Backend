@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { FirstAidGuideController } from '../../controllers/adminController/first_aid_guide.controller'
+import { FirstAidGuideController } from '../controllers/first_aid_guide.controller'
 
 import { authorize } from '~/middleware/auth.middleware'
 

@@ -1,4 +1,4 @@
-import NewsCategory from '../../database/models/news_category.model'
+import NewsCategory from '../database/models/news_category.model'
 
 export class NewsCategoryService {
     async getAllNewsCategories() {
