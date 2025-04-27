@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
-import notificationController from '../controllers/notification.controller'
-import { authorize } from '../middleware/auth.middleware'
+import notificationController from '../../controllers/notification.controller'
+import { authorize } from '../../middleware/auth.middleware'
 
 const router = Router()
 

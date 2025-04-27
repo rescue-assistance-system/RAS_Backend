@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import { NewsCategoryService } from '../services/news_category.service'
-import { createResponse } from '../utils/response.utils'
+import { NewsCategoryService } from '../../services/adminService/news_category.service'
+import { createResponse } from '../../utils/response.utils'
 
 export class NewsCategoryController {
     private readonly newsCategoryService: NewsCategoryService

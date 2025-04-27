@@ -82,8 +82,17 @@ export class AuthService {
         }
     }
 
-    public async login(email: string, password: string, device_id: string, fcm_token: string) {
+    public async login(
+        email: string,
+        password: string,
+        device_id: string,
+        fcm_token: string,
+        socket_id: string,
+        latitude: number,
+        longitude: number
+    ) {
         try {
+            console.log('Socket_id', socket_id)
             const user = await User.findOne({
                 where: { email }
             })
@@ -111,7 +120,32 @@ export class AuthService {
                 throw new Error('This device is already linked to another account.')
             }
 
-            await user.update({ device_id, fcm_token })
+            console.log('latitude', latitude)
+            console.log('longitude', longitude)
+            await user.update({ device_id, fcm_token, latitude, longitude })
+            if (socket_id) {
+                const userSocketKey = `account:${user.dataValues.id}`
+                await redisClient.set(
+                    userSocketKey,
+                    JSON.stringify({
+                        socket_id,
+                        latitude,
+                        longitude,
+                        role: user.dataValues.role,
+                        user_id: user.dataValues.id
+                    }),
+                    { EX: 3600 } // TTL là 1 giờ
+                )
+                console.log(`Socket ID and location for user ${user.dataValues.id} set to Redis:`, {
+                    socket_id,
+                    latitude,
+                    longitude,
+                    role: user.dataValues.role,
+                    user_id: user.dataValues.id
+                })
+            } else {
+                console.log('Socket ID not provided. Skipping Redis storage.')
+            }
 
             const tokens = {
                 access_token: generateAccessToken({
