@@ -169,17 +169,17 @@ class RescueTeamService {
         return { message: 'Rescue team deleted successfully' }
     }
     async getRescueTeamProfileById(id: number) {
-        // Đầu tiên tìm account
+        // get account info
         const rescueTeamAccount = await User.findOne({
             where: { id: id, role: 'rescue_team' }
         })
 
-        // Nếu không tìm thấy account
+        // find account info
         if (!rescueTeamAccount) {
             throw new Error('Rescue team account not found')
         }
 
-        // Tìm profile (có thể có hoặc không)
+        // find profile info
         const rescueTeamProfile = await RescueTeam.findOne({
             where: { user_id: id },
             include: [

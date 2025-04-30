@@ -240,7 +240,7 @@ export class AuthService {
         }
         console.log('user.device_id', user.device_id)
         console.log('device_id', device_id)
-        // Kiểm tra device_id
+        // Ccheck device_id
         if (user.device_id !== device_id) {
             throw new Error('Device ID mismatch. Please use the registered device.')
         }

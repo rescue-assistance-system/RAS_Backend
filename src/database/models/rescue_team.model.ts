@@ -2,18 +2,7 @@ import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
 import User from './user.model'
 
-class RescueTeam extends Model {
-    // public id!: number
-    // public userId!: number
-    // public team_name!: string
-    // public team_members!: any[]
-    // public default_latitude!: number
-    // public default_longitude!: number
-    // public description!: string
-    // public is_active!: boolean
-    // public readonly createdAt!: Date
-    // public readonly updatedAt!: Date
-}
+class RescueTeam extends Model {}
 
 RescueTeam.init(
     {
@@ -84,6 +73,11 @@ RescueTeam.init(
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: true
+        },
+        status: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'available'
         }
     },
     {
