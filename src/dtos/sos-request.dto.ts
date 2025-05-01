@@ -2,6 +2,7 @@ export interface SosRequestDto {
     userId: string
     latitude: number
     longitude: number
+    address: string
 }
 
 export interface SosResponseDto {
@@ -9,4 +10,5 @@ export interface SosResponseDto {
     userId: string
     latitude: number
     longitude: number
+    address: string
 }

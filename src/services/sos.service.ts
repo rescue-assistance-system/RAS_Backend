@@ -6,6 +6,7 @@ import { SocketManager } from '~/sockets/SocketManager'
 import { SosRequestDto, SosResponseDto } from '~/dtos/sos-request.dto'
 import CasesReport from '~/database/models/case_report.model'
 import SosRequest from '~/database/models/sos.model'
+import { CaseStatus } from '~/enums/case-status.enum'
 
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
@@ -23,10 +24,34 @@ export class SosService {
         return R * c // km
     }
 
+    private async findAvailableTeams(latitude: number, longitude: number, radius: number): Promise<any[]> {
+        try {
+            const teams = await RescueTeam.findAll({
+                where: {
+                    status: 'available'
+                }
+            })
+
+            const nearbyTeams = teams.filter((team) => {
+                const distance = this.calculateDistance(
+                    latitude,
+                    longitude,
+                    team.default_latitude,
+                    team.default_longitude
+                )
+                return distance <= radius
+            })
+
+            return nearbyTeams
+        } catch (error: any) {
+            console.error('Error finding available teams:', error)
+            throw new Error(`Failed to find available teams: ${error.message}`)
+        }
+    }
     public async sendSosRequest(data: SosRequestDto): Promise<string[]> {
         try {
-            const { userId, latitude, longitude } = data
-            const radii = [5, 10, 20]
+            const { userId, latitude, longitude, address } = data
+            const radii = [5, 10, 20, 30]
             let availableTeams: any[] = []
             //find rescue teams in radius
             for (const radius of radii) {
@@ -34,11 +59,12 @@ export class SosService {
                 console.log('Radius:', radius, 'Available teams:', availableTeams)
                 if (availableTeams.length > 0) break
             }
-            console.log('radius:', radii)
-            // console.log('Available teams:', availableTeams);
 
             if (availableTeams.length === 0) {
-                throw new Error('No available rescue teams found')
+                console.log('No teams found within 30km. Sending to all rescue teams.')
+                availableTeams = await RescueTeam.findAll({
+                    where: { status: 'available' }
+                })
             }
 
             const notifiedTeamIds: string[] = []
@@ -52,7 +78,8 @@ export class SosService {
                     teamId,
                     userId,
                     latitude,
-                    longitude
+                    longitude,
+                    address
                 }
 
                 try {
@@ -72,13 +99,16 @@ export class SosService {
                 }
             }
 
-            const nearestTeamIds = notifiedTeamIds.map((id) => {
-                const teamIdNum = parseInt(id)
-                if (isNaN(teamIdNum)) {
-                    throw new Error(`Invalid teamId: ${id}`)
-                }
-                return teamIdNum
-            })
+            const nearestTeamIds = notifiedTeamIds
+                .map((id) => {
+                    const teamIdNum = parseInt(id)
+                    if (isNaN(teamIdNum)) {
+                        console.error(`Invalid teamId: ${id}. Skipping this team.`)
+                        return null
+                    }
+                    return teamIdNum
+                })
+                .filter((id) => id !== null)
 
             const userIdNum = parseInt(userId)
             if (isNaN(userIdNum)) {
@@ -92,43 +122,25 @@ export class SosService {
                 order: [['created_at', 'DESC']]
             })
             let caseToUse: CasesReport
-            const ONE_HOUR_MS = 60 * 60 * 1000 // 1 hour
 
             if (latestCase) {
                 // CHeck status of case
-                const isCaseOpen = !['completed', 'cancelled'].includes(latestCase.dataValues.status)
+                const isCaseOpen = ![CaseStatus.COMPLETED, CaseStatus.CANCELLED].includes(latestCase.dataValues.status)
                 console.log('Latest case status:', latestCase.dataValues.status)
-                // Check if the latest case is within the time limit
-                let isWithinTimeLimit = false
-                if (isCaseOpen && latestCase.dataValues.sos_list && latestCase.dataValues.sos_list.length > 0) {
-                    // get last SOS ID from sos_list
-                    const lastSosId = Math.max(...latestCase.dataValues.sos_list)
-                    const lastSos = await SosRequest.findOne({
-                        where: { id: lastSosId }
-                    })
-
-                    if (lastSos && lastSos.created_at) {
-                        const createdAtLocal = new Date(lastSos.created_at).getTime() + 7 * 60 * 60 * 1000 // Change to UTC+7 (Vietnam timezone)
-                        const timeDiff = Date.now() - createdAtLocal
-                        isWithinTimeLimit = timeDiff <= ONE_HOUR_MS
-                    } else {
-                        console.error('Last SOS or created_at is invalid')
-                    }
-                }
 
                 // Check if the latest case is open and within the time limit
-                if (isCaseOpen && isWithinTimeLimit) {
+                if (isCaseOpen) {
                     caseToUse = latestCase
                 } else {
                     caseToUse = await CasesReport.create({
-                        status: 'pending',
+                        status: CaseStatus.PENDING,
                         from_id: userIdNum,
                         sos_list: []
                     })
                 }
             } else {
                 caseToUse = await CasesReport.create({
-                    status: 'pending',
+                    status: CaseStatus.PENDING,
                     from_id: userIdNum,
                     sos_list: []
                 })
@@ -153,39 +165,77 @@ export class SosService {
         }
     }
 
-    private async findAvailableTeams(latitude: number, longitude: number, radius: number): Promise<any[]> {
+    public async markSafe(caseId: number): Promise<void> {
         try {
-            const teams = await RescueTeam.findAll({
-                where: {
-                    status: 'available'
-                    // is_active: true
-                },
-                include: [
-                    {
-                        model: User,
-                        as: 'user',
-                        where: {
-                            role: 'rescue_team'
-                        },
-                        attributes: ['id', 'fcm_token']
+            const caseToUpdate = await CasesReport.findOne({
+                where: { id: caseId }
+            })
+
+            if (!caseToUpdate) {
+                throw new Error(`Case with ID ${caseId} not found`)
+            }
+
+            if (caseToUpdate.status !== CaseStatus.PENDING) {
+                console.log(`Case with ID ${caseId} is not in pending status. Action not allowed.`)
+                throw new Error(`Case with ID ${caseId} is not in pending status.`)
+            }
+
+            const sosList = caseToUpdate.sos_list || []
+            if (sosList.length === 0) {
+                console.log(`Case with ID ${caseId} has no SOS requests. Action not allowed.`)
+                throw new Error(`Case with ID ${caseId} has no SOS requests.`)
+            }
+
+            await caseToUpdate.update({ status: CaseStatus.CANCELLED, cancelled_at: new Date() })
+            console.log(`Case with ID ${caseId} marked as cancelled`)
+            for (const sosId of sosList) {
+                const sosRequest = await SosRequest.findOne({
+                    where: { id: sosId }
+                })
+
+                if (sosRequest) {
+                    const nearestTeamIds = sosRequest.nearest_team_ids || []
+                    for (const teamId of nearestTeamIds) {
+                        const socketId = await SocketManager.getSocketId(teamId.toString())
+
+                        const notification = {
+                            message: `Case ${caseId} has been marked as cancelled. The User is safe.`
+                        }
+                        console.log('Notification:', notification)
+                        console.log(socketId, teamId.toString())
+                        //Online team
+                        if (socketId) {
+                            await SocketService.getInstance().emitToSocket(socketId, 'case_cancelled', notification)
+                            console.log(`Notification sent to team ${teamId} via socket`)
+                        } else {
+                            //Offline team
+                            const team = await RescueTeam.findOne({
+                                where: { user_id: teamId },
+                                include: [
+                                    {
+                                        model: User,
+                                        as: 'user',
+                                        attributes: ['id', 'fcm_token']
+                                    }
+                                ]
+                            })
+                            if (team?.user?.dataValues?.fcm_token) {
+                                console.log(`Sending notification to team ${teamId} via FCM`)
+                                await new NotificationService().sendNotification(teamId, {
+                                    type: 'case_cancelled',
+                                    message: `Case ${caseId} has been marked as cancelled. The user is safe.`
+                                })
+                                console.log(`Notification sent to team ${teamId} via FCM`)
+                            }
+                        }
                     }
-                ]
-            })
-
-            const nearbyTeams = teams.filter((team) => {
-                const distance = this.calculateDistance(
-                    latitude,
-                    longitude,
-                    team.default_latitude,
-                    team.default_longitude
-                )
-                return distance <= radius
-            })
-
-            return nearbyTeams
+                } else {
+                    console.error(`SOS request with ID ${sosId} not found`)
+                }
+            }
         } catch (error: any) {
-            console.error('Error finding available teams:', error)
-            throw new Error(`Failed to find available teams: ${error.message}`)
+            console.error('Error marking case as completed:', error)
+            throw new Error(`Failed to mark case as completed: ${error.message}`)
         }
     }
 }

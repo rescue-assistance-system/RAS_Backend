@@ -104,7 +104,8 @@ export class SocketService {
             teamId: data.teamId,
             userId: data.userId,
             latitude: data.latitude,
-            longitude: data.longitude
+            longitude: data.longitude,
+            address: data.address
         })
     }
 }

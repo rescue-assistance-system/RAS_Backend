@@ -9,7 +9,8 @@ export class NotificationService {
             type: 'sos_request',
             userId: data.userId,
             latitude: data.latitude,
-            longitude: data.longitude
+            longitude: data.longitude,
+            address: data.address
         }
 
         await this.sendNotification(data.teamId, dataToSend)
