@@ -1,9 +1,31 @@
+import { Op } from 'sequelize'
 import { firebaseAdmin } from '~/configs/firebase.config'
 import User from '~/database/models/user.model'
 import { LocationRequestDto } from '~/dtos/location-request.dto'
+import { MessageDTO } from '~/dtos/messageDTO'
 import { SosResponseDto } from '~/dtos/sos-request.dto'
 
 export class NotificationService {
+    async sendNotification(userIds: string[], data: object) {
+        const fcmTokens = await this.getFCMTokens(userIds)
+        console.log('FCM token:', fcmTokens)
+
+        const stringifiedData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
+        for (const token of fcmTokens) {
+            const message = {
+                token,
+                data: stringifiedData
+            }
+
+            try {
+                const response = await firebaseAdmin.messaging().send(message)
+                console.log('Successfully sent message to', token, ':', response)
+            } catch (error) {
+                console.error('Error sending message to', token, ':', error)
+            }
+        }
+    }
+
     async handleSosRequest(data: SosResponseDto): Promise<void> {
         const dataToSend = {
             type: 'sos_request',
@@ -13,7 +35,7 @@ export class NotificationService {
             address: data.address
         }
 
-        await this.sendNotification(data.teamId, dataToSend)
+        await this.sendNotification([data.teamId], dataToSend)
     }
 
     async handleAskLocation(data: LocationRequestDto): Promise<void> {
@@ -23,46 +45,39 @@ export class NotificationService {
             toId: data.toId
         }
 
-        await this.sendNotification(data.toId, dataToSend)
+        this.sendNotification([data.toId], dataToSend)
     }
 
-    async sendNotification(userId: string, data: object) {
-        const fcmToken = await this.getFCMToken(userId)
-        if (!fcmToken) {
-            console.error('FCM token not found for user:', userId)
-            return
+    async sendMessage(data: MessageDTO, toIds: string[]): Promise<void> {
+        const dataToSend = {
+            type: 'message',
+            ...data
         }
 
-        console.log('FCM token:', fcmToken)
-        const stringifiedData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
-        const message = {
-            token: fcmToken,
-            data: stringifiedData
-        }
-
-        try {
-            const response = await firebaseAdmin.messaging().send(message)
-            console.log(`Successfully sent ${data['type'] === 'sos_request' ? 'SOS ' : ''}message:`, response)
-            return response
-        } catch (error) {
-            console.error('Error sending message:', error)
-            throw error
-        }
+        await this.sendNotification(toIds, dataToSend)
     }
 
-    async getFCMToken(userId: string): Promise<string | null> {
+    async getFCMTokens(userIds: string[]): Promise<string[]> {
         try {
-            const user = await User.findOne({
-                where: { id: userId },
+            const users = await User.findAll({
+                where: {
+                    id: {
+                        [Op.in]: userIds
+                    }
+                },
                 attributes: ['fcm_token']
             })
-            if (!user) {
-                console.error('User not found for ID:', userId)
-                return null
+
+            if (users.length === 0) {
+                console.error('No users found')
+                return []
             }
-            return user.getDataValue('fcm_token')
+
+            return users
+                .map((user) => user.dataValues.fcm_token)
+                .filter((token) => token !== null && token !== undefined)
         } catch (error) {
-            console.error('Error fetching FCM token:', error)
+            console.error('Error fetching device tokens:', error)
             throw error
         }
     }
