@@ -5,7 +5,8 @@ import { convertToDTO as convertToMessageDTO, MessageDTO } from '~/dtos/messageD
 import { SocketService } from '~/sockets/SocketService'
 import { NotificationService } from './notification.service'
 import SosRequest from '~/database/models/sos.model'
-import { Role } from '~/enums/Role'
+import { Role } from '~/enums/role'
+import { CaseStatus } from '~/enums/case-status.enum'
 
 export class MessagingService {
     async sendMessage(
@@ -70,16 +71,17 @@ export class MessagingService {
     }
 
     async getRescueTeamInCase(caseId: number): Promise<string[]> {
-        // Check if the case accepted by a team
-        const caseReport = await CasesReport.findOne({
+        // Check if the case'status is 'accepted' and get the accepted team ID
+        const acceptedCaseReport = await CasesReport.findOne({
             attributes: ['accepted_team_id'],
-            where: { id: caseId }
+            where: {
+                id: caseId
+            }
         })
-        if (!caseReport) {
-            throw new Error('Case not found')
-        }
-        const acceptedTeamId = caseReport.dataValues.accepted_team_id
+
+        const acceptedTeamId = acceptedCaseReport?.dataValues.accepted_team_id
         if (acceptedTeamId) {
+            console.log('Accepted team ID:', acceptedTeamId)
             return [acceptedTeamId.toString()]
         }
 
