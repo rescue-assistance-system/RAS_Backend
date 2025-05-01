@@ -13,7 +13,7 @@ import { createSocketServer } from './configs/socket.config'
 // import { SocketService } from './services/socket.service'
 import routes from './routes/index'
 import cors from 'cors'
-import { SocketService } from './sockets/SocketService'
+import './jobs'
 import { setupSocketIO } from './sockets'
 
 const app: Express = express()

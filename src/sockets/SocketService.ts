@@ -3,7 +3,7 @@ import { Server, Socket } from 'socket.io'
 import { SocketManager } from './SocketManager'
 import { LocationRequestDto } from '~/dtos/location-request.dto'
 import { LocationResponseDto } from '~/dtos/location-response.dto'
-
+import { SosResponseDto } from '~/dtos/sos-request.dto'
 export class SocketService {
     private static instance: SocketService
     private io: Server | null = null
@@ -92,5 +92,20 @@ export class SocketService {
         } else {
             throw new Error(`User ${data.toId} is offline, cannot send location response`)
         }
+    }
+    public emitToSocket(socketId: string, event: string, data: any): void {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        this.io.to(socketId).emit(event, data)
+    }
+
+    public async handleSosRequest(socketId: string, data: SosResponseDto): Promise<void> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        this.io.to(socketId).emit('sos_request', {
+            teamId: data.teamId,
+            userId: data.userId,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            address: data.address
+        })
     }
 }
