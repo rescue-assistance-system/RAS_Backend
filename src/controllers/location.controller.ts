@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { handleApiError } from '~/middleware/ErrorHandler'
 import { LocationService } from '~/services/location.service'
+import { SocketManager } from '~/sockets/SocketManager'
 import { createResponse } from '~/utils/response.utils'
 
 export class LocationController {
@@ -58,6 +59,15 @@ export class LocationController {
             res.status(200).json(createResponse('success', null, 'Send location response successfully.'))
         } catch (error: any) {
             return handleApiError(res, error, 'Error processing send location response:')
+        }
+    }
+
+    public async getAllSockets(req: Request, res: Response) {
+        try {
+            const sockets = await SocketManager.getAllSockets()
+            res.status(200).json(createResponse('success', sockets, null))
+        } catch (error: any) {
+            return handleApiError(res, error, 'Error processing get all sockets:')
         }
     }
 }

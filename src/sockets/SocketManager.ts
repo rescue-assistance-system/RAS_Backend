@@ -14,11 +14,23 @@ export class SocketManager {
         return await RedisManager.getSocketIdFromRedis(userId)
     }
 
+    static async getListOfSocketIds(userIds: string[]): Promise<string[]> {
+        return await RedisManager.getListOfSocketIdsByUserIds(userIds)
+    }
+
+    static async getListOnlineUsers(userIds: string[]): Promise<string[]> {
+        return await RedisManager.getListOnlineUsers(userIds)
+    }
+
     static getUserIdFromSocket(socket: Socket): string | undefined {
         return socket.data.userId
     }
 
     static setUserIdToSocket(socket: Socket, userId: string): void {
         socket.data.userId = userId
+    }
+
+    static async getAllSockets(): Promise<string[]> {
+        return await RedisManager.getAllUserIdsFromRedis()
     }
 }

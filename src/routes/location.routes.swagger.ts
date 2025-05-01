@@ -105,7 +105,8 @@ router.post('/update-location', locationController.updateLocation.bind(locationC
  *                   type: string
  *                   example: User ID, toUserId are required
  */
-router.get('/ask-user-location/:toUserId', locationController.askUserLocation.bind(locationController))
+router.get('/ask-user-location/:toUserId', locationController.askUserLocation.bind(locationController));
+
 
 /**
  * @swagger
@@ -190,5 +191,7 @@ router.post('/send-location-response', locationController.sendLocationResponse.b
  *           type: number
  *           example: 106.660172
  */
+
+router.get('/get-all-sockets', locationController.getAllSockets.bind(locationController))
 
 export default router
