@@ -39,6 +39,47 @@ export class RedisManager {
         }
     }
 
+    static async getListOfSocketIdsByUserIds(userIds: string[]) {
+        try {
+            const socketIds = await Promise.all(
+                userIds.map(async (userId) => {
+                    const socketId = await redisClient.get(`user_socket:${userId}`)
+                    return socketId
+                })
+            )
+            return socketIds.filter((socketId) => socketId !== null)
+        } catch (error) {
+            console.error('Error getting list of socket IDs from Redis:', error)
+            return []
+        }
+    }
+
+    static async getListOnlineUsers(userIds: string[]): Promise<string[]> {
+        try {
+            const onlineUsers = await Promise.all(
+                userIds.map(async (userId) => {
+                    const socketId = await redisClient.get(`user_socket:${userId}`)
+                    return socketId == null ? null : userId
+                })
+            )
+            return onlineUsers.filter((userId) => userId !== null) as string[]
+        } catch (error) {
+            console.error('Error getting list of online users from Redis:', error)
+            return []
+        }
+    }
+
+    static async getAllUserIdsFromRedis() {
+        try {
+            const keys = await redisClient.keys('user_socket:*')
+            const userIds = keys.map((key) => key.split(':')[1])
+            return userIds
+        } catch (error) {
+            console.error('Error getting all user IDs from Redis:', error)
+            return []
+        }
+    }
+
     static async setLocationToRedis(userId: string, latitude: number, longitude: number) {
         try {
             const currentTime = new Date().toISOString()

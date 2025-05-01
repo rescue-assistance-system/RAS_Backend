@@ -1,39 +1,27 @@
+import { Op } from 'sequelize'
 import { firebaseAdmin } from '~/configs/firebase.config'
 import User from '~/database/models/user.model'
 import { LocationRequestDto } from '~/dtos/location-request.dto'
-
-// interface NotificationData {
-//     [key: string]: string | number | boolean
-// }
+import { MessageDTO } from '~/dtos/messageDTO'
 
 export class NotificationService {
-    async sendNotification(userId: string, data: object) {
-        const fcmToken = await this.getFCMToken(userId)
-        // const fcmToken =
-        //     'efi5SVUdSviTfVEU2OqiJY:APA91bHZuz9zLHWRpcNFlU7GRmyRoJNWaSVyXukX2q4ymJuWdMamRmdJZjnI0zo_dvyaiu2HlvIYHrjlfqJrP3Q5OiHG4_XyE9TPZ8LQYgkbFk2J-_m6m1Y'
-        if (!fcmToken) {
-            console.error('FCM token not found for user:', userId)
-            return
-        }
+    async sendNotification(userIds: string[], data: object) {
+        const fcmTokens = await this.getFCMTokens(userIds)
+        console.log('FCM token:', fcmTokens)
 
-        console.log('FCM token:', fcmToken)
         const stringifiedData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
-        const message = {
-            token: fcmToken,
-            // notification: {
-            //     title: payload.title,
-            //     body: payload.body
-            // },
-            data: stringifiedData
-        }
+        for (const token of fcmTokens) {
+            const message = {
+                token,
+                data: stringifiedData
+            }
 
-        try {
-            const response = await firebaseAdmin.messaging().send(message)
-            console.log('Successfully sent message:', response)
-            return response
-        } catch (error) {
-            console.error('Error sending message:', error)
-            throw error
+            try {
+                const response = await firebaseAdmin.messaging().send(message)
+                console.log('Successfully sent message to', token, ':', response)
+            } catch (error) {
+                console.error('Error sending message to', token, ':', error)
+            }
         }
     }
 
@@ -44,22 +32,39 @@ export class NotificationService {
             toId: data.toId
         }
 
-        this.sendNotification(data.toId, dataToSend)
+        this.sendNotification([data.toId], dataToSend)
     }
 
-    async getFCMToken(userId: string): Promise<string | null> {
+    async sendMessage(data: MessageDTO, toIds: string[]): Promise<void> {
+        const dataToSend = {
+            type: 'message',
+            ...data
+        }
+
+        await this.sendNotification(toIds, dataToSend)
+    }
+
+    async getFCMTokens(userIds: string[]): Promise<string[]> {
         try {
-            const user = await User.findOne({
-                where: { id: userId },
+            const users = await User.findAll({
+                where: {
+                    id: {
+                        [Op.in]: userIds
+                    }
+                },
                 attributes: ['fcm_token']
             })
-            if (!user) {
-                console.error('User not found')
-                return null
+
+            if (users.length === 0) {
+                console.error('No users found')
+                return []
             }
-            return user.getDataValue('fcm_token')
+
+            return users
+                .map((user) => user.dataValues.fcm_token)
+                .filter((token) => token !== null && token !== undefined)
         } catch (error) {
-            console.error('Error fetching device token:', error)
+            console.error('Error fetching device tokens:', error)
             throw error
         }
     }

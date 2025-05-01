@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io'
 import { SocketManager } from './SocketManager'
 import { LocationRequestDto } from '~/dtos/location-request.dto'
 import { LocationResponseDto } from '~/dtos/location-response.dto'
+import { MessageDTO } from '~/dtos/messageDTO'
 
 export class SocketService {
     private static instance: SocketService
@@ -92,5 +93,23 @@ export class SocketService {
         } else {
             throw new Error(`User ${data.toId} is offline, cannot send location response`)
         }
+    }
+
+    public async sendMessage(message: MessageDTO, toIds: string[]): Promise<void> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        const socketIds = await SocketManager.getListOfSocketIds(toIds)
+        if (socketIds.length === 0) {
+            console.log(`No online users found for IDs: ${toIds.join(', ')}`)
+            return
+        }
+        if (socketIds.length !== 0) {
+            this.io.to(socketIds).emit('message', message)
+        }
+    }
+
+    public async getListOnlineUsers(userIds: string[]): Promise<string[]> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        const onlineUsers = await SocketManager.getListOnlineUsers(userIds)
+        return onlineUsers
     }
 }
