@@ -5,7 +5,7 @@ import { convertToDTO as convertToMessageDTO, MessageDTO } from '~/dtos/messageD
 import { SocketService } from '~/sockets/SocketService'
 import { NotificationService } from './notification.service'
 import SosRequest from '~/database/models/sos.model'
-import { Role } from '~/enums/role'
+import { Role } from '../enums/role'
 import { ConversationPaging, Paging } from '~/dtos/paging'
 import { Op } from 'sequelize'
 

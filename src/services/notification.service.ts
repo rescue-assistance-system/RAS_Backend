@@ -81,4 +81,29 @@ export class NotificationService {
             throw error
         }
     }
+
+    public async sendToOfflineUsers(userIds: string[], notification: { type: string; message: string }): Promise<void> {
+        const fcmTokens = await this.getFCMTokens(userIds)
+        if (fcmTokens.length === 0) {
+            console.log('No FCM tokens found for offline users.')
+            return
+        }
+
+        const stringifiedData = Object.fromEntries(
+            Object.entries(notification).map(([key, value]) => [key, String(value)])
+        )
+        for (const token of fcmTokens) {
+            const message = {
+                token,
+                data: stringifiedData
+            }
+
+            try {
+                const response = await firebaseAdmin.messaging().send(message)
+                console.log('Successfully sent message to', userIds, token, ':', response)
+            } catch (error) {
+                console.error('Error sending message to', token, ':', error)
+            }
+        }
+    }
 }

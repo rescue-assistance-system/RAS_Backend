@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { handleApiError } from '~/middleware/ErrorHandler'
 import { SosService } from '~/services/sos.service'
 import { createResponse } from '~/utils/response.utils'
-import { CaseStatus } from '~/enums/case-status.enum'
+import { CaseStatus } from '../enums/case-status.enum'
 
 export class SosController {
     private sosService: SosService

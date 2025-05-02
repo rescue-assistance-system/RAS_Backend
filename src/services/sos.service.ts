@@ -6,7 +6,7 @@ import { SocketManager } from '~/sockets/SocketManager'
 import { SosRequestDto, SosResponseDto } from '~/dtos/sos-request.dto'
 import CasesReport from '~/database/models/case_report.model'
 import SosRequest from '~/database/models/sos.model'
-import { CaseStatus } from '~/enums/case-status.enum'
+import { CaseStatus } from '../enums/case-status.enum'
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -49,18 +49,20 @@ export class SosService {
     }
 
     public async sendNotificationToUser(
-        userId: number,
+        userIds: number[],
         notification: { type: string; message: string }
     ): Promise<void> {
-        const socketId = await SocketManager.getSocketId(userId.toString())
-        if (socketId) {
-            // User Online
-            await SocketService.getInstance().emitToSocket(socketId, 'sos_request', notification)
-            console.log(`Notification sent to user ${userId} via socket`)
-        } else {
-            // User Offline
-            await new NotificationService().sendNotification([userId.toString()], notification)
-            console.log(`Notification sent to user ${userId} via FCM`)
+        const userIdStrings = userIds.map((id) => id.toString())
+
+        const onlineUsers = await SocketService.getInstance().getListOnlineUsers(userIdStrings)
+        const offlineUsers = userIdStrings.filter((id) => !onlineUsers.includes(id))
+
+        if (onlineUsers.length > 0) {
+            await SocketService.getInstance().sendToOnlineUsers(onlineUsers, notification.type, notification)
+        }
+
+        if (offlineUsers.length > 0) {
+            await new NotificationService().sendToOfflineUsers(offlineUsers, notification)
         }
     }
 
@@ -117,22 +119,15 @@ export class SosService {
             const notifiedTeamIds: string[] = []
 
             //send SOS signal to RCs
-            await Promise.all(
-                availableTeams.map(async (team) => {
-                    const teamId = team.user_id
-                    const notification = {
-                        type: 'sos_request',
-                        message: `SOS request received for location (${latitude}, ${longitude}).`
-                    }
+            const teamIds = availableTeams.map((team) => team.user_id)
+            const notification = {
+                type: 'sos_request',
+                message: `SOS request received for location (${latitude}, ${longitude}).`
+            }
 
-                    try {
-                        await this.sendNotificationToUser(teamId, notification)
-                        notifiedTeamIds.push(teamId.toString())
-                    } catch (error) {
-                        console.error(`Error sending SOS to team ${teamId}:`, error)
-                    }
-                })
-            )
+            await this.sendNotificationToUser(teamIds, notification)
+            notifiedTeamIds.push(...teamIds.map((id) => id.toString()))
+
             const nearestTeamIds = notifiedTeamIds
                 .map((id) => {
                     const teamIdNum = parseInt(id)
@@ -213,14 +208,12 @@ export class SosService {
 
             // Notify all teams in the SOS list
             const allNearestTeamIds = await this.getNearestTeamIds(caseToUpdate.sos_list || [])
-            await Promise.all(
-                Array.from(allNearestTeamIds).map((teamId) =>
-                    this.sendNotificationToUser(teamId, {
-                        type: 'case_cancelled',
-                        message: `Case ${caseId} has been marked as cancelled. The user is safe.`
-                    })
-                )
-            )
+            const notification = {
+                type: 'case_cancelled',
+                message: `Case ${caseId} has been marked as cancelled. The user is safe.`
+            }
+
+            await this.sendNotificationToUser(Array.from(allNearestTeamIds), notification)
         } catch (error: any) {
             console.error('Error marking case as safe:', error)
             throw new Error(`Failed to mark case as safe: ${error.message}`)
@@ -239,24 +232,24 @@ export class SosService {
             console.log(`Case ${caseId} has been accepted by team ${teamId}.`)
 
             const userId = caseToUpdate.from_id
-            await this.sendNotificationToUser(userId, {
-                type: 'case_accepted',
-                message: `Your case ${caseId} has been accepted by a rescue team (${teamId}).`
-            })
 
             // Notify other rescue teams
             const sosList = caseToUpdate.sos_list || []
             const allNearestTeamIds = await this.getNearestTeamIds(sosList)
             const remainingTeamIds = Array.from(allNearestTeamIds).filter((id) => id !== teamId)
 
-            await Promise.all(
-                remainingTeamIds.map((otherTeamId) =>
-                    this.sendNotificationToUser(otherTeamId, {
-                        type: 'case_accepted',
-                        message: `Case ${caseId} has been accepted by team ${teamId}.`
-                    })
-                )
-            )
+            const userNotification = {
+                type: 'case_accepted',
+                message: `Your case ${caseId} has been accepted by a rescue team (${teamId}).`
+            }
+
+            const teamNotification = {
+                type: 'case_accepted',
+                message: `Case ${caseId} has been accepted by team ${teamId}.`
+            }
+
+            await this.sendNotificationToUser([userId], userNotification)
+            await this.sendNotificationToUser(remainingTeamIds, teamNotification)
         } catch (error: any) {
             console.error('Error accepting case:', error)
             throw new Error(`Failed to accept case: ${error.message}`)
@@ -282,22 +275,21 @@ export class SosService {
             const sosList = caseToUpdate.sos_list || []
             const allNearestTeamIds = await this.getNearestTeamIds(sosList)
             const remainingTeamIds = Array.from(allNearestTeamIds).filter((id) => !rejectedTeamIds.includes(id))
-
-            await Promise.all(
-                remainingTeamIds.map((otherTeamId) =>
-                    this.sendNotificationToUser(otherTeamId, {
-                        type: 'case_rejected',
-                        message: `Case ${caseId} has been rejected by team ${teamId}.`
-                    })
-                )
-            )
-
             // Notify the user
             const userId = caseToUpdate.from_id
-            await this.sendNotificationToUser(userId, {
+
+            const teamNotification = {
                 type: 'case_rejected',
                 message: `Case ${caseId} has been rejected by team ${teamId}.`
-            })
+            }
+
+            const userNotification = {
+                type: 'case_rejected',
+                message: `Case ${caseId} has been rejected by team ${teamId}.`
+            }
+
+            await this.sendNotificationToUser(remainingTeamIds, teamNotification)
+            await this.sendNotificationToUser([userId], userNotification)
         } catch (error: any) {
             console.error('Error rejecting case:', error)
             throw new Error(`Failed to reject case: ${error.message}`)
@@ -361,10 +353,12 @@ export class SosService {
             console.log(`Case ${caseId} status updated to ${newStatus} by team ${teamId}.`)
 
             const userId = caseToUpdate.dataValues.from_id
-            await this.sendNotificationToUser(userId, {
+            const notification = {
                 type: 'case_status_updated',
                 message: `The status of your case ${caseId} has been updated to ${newStatus} by the rescue team.`
-            })
+            }
+
+            await this.sendNotificationToUser([userId], notification)
         } catch (error: any) {
             console.error('Error changing case status:', error)
             throw new Error(`Failed to change case status: ${error.message}`)
