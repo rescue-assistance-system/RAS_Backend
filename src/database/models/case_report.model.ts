@@ -58,6 +58,10 @@ CasesReport.init(
         sos_list: {
             type: DataTypes.ARRAY(DataTypes.INTEGER),
             allowNull: true
+        },
+        rejected_team_ids: {
+            type: DataTypes.ARRAY(DataTypes.INTEGER),
+            allowNull: true
         }
     },
     {
