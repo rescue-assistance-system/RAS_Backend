@@ -2,13 +2,13 @@ import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
 
 class Message extends Model {
-    // public id!: number
-    // public from_id!: number
-    // public created_at!: Date
-    // public content!: string
-    // public contentType!: string
-    // public sender_name?: string
-    // public case_id!: number
+    public id!: number
+    public from_id!: number
+    public created_at!: Date
+    public content!: string
+    public contentType!: string
+    public sender_name?: string
+    public case_id!: number
 }
 
 Message.init(

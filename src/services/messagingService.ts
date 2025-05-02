@@ -1,4 +1,4 @@
-import { User } from '~/database'
+import { sequelize, User } from '~/database'
 import CasesReport from '~/database/models/case_report.model'
 import Message from '~/database/models/message.model'
 import { convertToDTO as convertToMessageDTO, MessageDTO } from '~/dtos/messageDTO'
@@ -6,7 +6,8 @@ import { SocketService } from '~/sockets/SocketService'
 import { NotificationService } from './notification.service'
 import SosRequest from '~/database/models/sos.model'
 import { Role } from '~/enums/role'
-import { CaseStatus } from '~/enums/case-status.enum'
+import { ConversationPaging, Paging } from '~/dtos/paging'
+import { Op } from 'sequelize'
 
 export class MessagingService {
     async sendMessage(
@@ -46,6 +47,149 @@ export class MessagingService {
         }
 
         return messageDTO
+    }
+
+    async getConversation(
+        userId: number,
+        role: string,
+        caseId: number,
+        page: number,
+        limit: number
+    ): Promise<Paging<MessageDTO> | null> {
+        const accessable = await this.canAccessConversation(caseId, userId, role)
+        if (!accessable) {
+            throw new Error('PERMISSION_DENIED')
+        }
+
+        const offset = (page - 1) * limit
+        const messages = await Message.findAll({
+            where: { case_id: caseId },
+            limit: limit,
+            offset: offset,
+            order: [['created_at', 'DESC']]
+        })
+        if (!messages || messages.length === 0) {
+            return null
+        }
+
+        const totalItems = await Message.count({ where: { case_id: caseId } })
+        const content = messages.map((message) => convertToMessageDTO(message.dataValues))
+        return new Paging<MessageDTO>(content, totalItems, page, limit)
+    }
+
+    async getListConversationsByUser(
+        userId: number,
+        page: number,
+        limit: number
+    ): Promise<ConversationPaging<MessageDTO> | null> {
+        const cases = await CasesReport.findAll({
+            where: { from_id: userId },
+            attributes: ['id']
+        })
+        if (!cases || cases.length === 0) {
+            return null
+        }
+
+        const caseIds = cases.map((caseReport) => caseReport.dataValues.id)
+        const totalItems = caseIds.length
+        const offset = (page - 1) * limit
+        const messages = await sequelize.query(
+            `
+            SELECT m.*
+            FROM messages m
+            INNER JOIN (
+                SELECT case_id, MAX(created_at) AS max_created_at
+                FROM messages
+                WHERE case_id IN (:caseIds)
+                GROUP BY case_id
+            ) latest
+            ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
+            ORDER BY m.created_at DESC
+            LIMIT :limit OFFSET :offset
+            `,
+            {
+                replacements: {
+                    caseIds,
+                    limit,
+                    offset
+                },
+                model: Message,
+                mapToModel: true
+            }
+        )
+        if (!messages || messages.length === 0) {
+            return null
+        }
+        const content = messages.map((message) => convertToMessageDTO(message.dataValues))
+        return new ConversationPaging<MessageDTO>(content, totalItems, page, limit)
+    }
+
+    async getListConversationsByRescueTeam(
+        rescueTeamId: number,
+        page: number,
+        limit: number
+    ): Promise<ConversationPaging<MessageDTO> | null> {
+        const offset = (page - 1) * limit
+
+        const cases = await CasesReport.findAll({
+            where: { accepted_team_id: rescueTeamId },
+            attributes: ['id']
+        })
+
+        if (!cases || cases.length === 0) {
+            return null
+        }
+
+        const caseIds = cases.map((caseReport) => caseReport.dataValues.id)
+        const totalItems = caseIds.length
+        const messages = await sequelize.query(
+            `
+            SELECT m.*
+            FROM messages m
+            INNER JOIN (
+                SELECT case_id, MAX(created_at) AS max_created_at
+                FROM messages
+                WHERE case_id IN (:caseIds)
+                GROUP BY case_id
+            ) latest
+            ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
+            ORDER BY m.created_at DESC
+            LIMIT :limit OFFSET :offset
+            `,
+            {
+                replacements: {
+                    caseIds,
+                    limit,
+                    offset
+                },
+                model: Message,
+                mapToModel: true
+            }
+        )
+
+        if (!messages || messages.length === 0) {
+            return null
+        }
+
+        const content = messages.map((message) => convertToMessageDTO(message.dataValues))
+        return new ConversationPaging<MessageDTO>(content, totalItems, page, limit)
+    }
+
+    async canAccessConversation(caseId: number, userId: number, role: string): Promise<boolean> {
+        console.log('User ID:', userId)
+        if (role === Role.RESCUE_TEAM) {
+            const authorRC = await this.getRescueTeamInCase(caseId)
+            console.log('Rescue team IDs:', authorRC)
+            if (authorRC.includes(userId.toString())) {
+                return true
+            }
+        } else if (role === Role.USER) {
+            const authorUser = await this.getUserIdInCase(caseId)
+            if (authorUser && authorUser === userId) {
+                return true
+            }
+        }
+        return false
     }
 
     async getSenderName(fromId: number): Promise<string | null> {
