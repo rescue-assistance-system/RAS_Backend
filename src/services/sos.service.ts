@@ -2,11 +2,11 @@ import User from '~/database/models/user.model'
 import RescueTeam from '~/database/models/rescue_team.model'
 import { SocketService } from '~/sockets/SocketService'
 import { NotificationService } from '~/services/notification.service'
-import { SocketManager } from '~/sockets/SocketManager'
 import { SosRequestDto, SosResponseDto } from '~/dtos/sos-request.dto'
 import CasesReport from '~/database/models/case_report.model'
 import SosRequest from '~/database/models/sos.model'
 import { CaseStatus } from '../enums/case-status.enum'
+import { NotificationType } from '~/enums/notification-types.enum'
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -81,7 +81,7 @@ export class SosService {
         return allNearestTeamIds
     }
 
-    public async validateCaseStatus(caseId: number, expectedStatus: CaseStatus): Promise<CasesReport> {
+    public async validateCaseStatus(caseId: number, expectedStatuses: CaseStatus | CaseStatus[]): Promise<CasesReport> {
         const caseToUpdate = await CasesReport.findOne({
             where: { id: caseId }
         })
@@ -90,8 +90,13 @@ export class SosService {
             throw new Error(`Case with ID ${caseId} not found`)
         }
 
-        if (caseToUpdate.status !== expectedStatus) {
-            throw new Error(`Case with ID ${caseId} is not in ${expectedStatus} status.`)
+        const currentStatus = caseToUpdate.status as CaseStatus
+
+        const validStatuses = Array.isArray(expectedStatuses) ? expectedStatuses : [expectedStatuses]
+        if (!validStatuses.includes(currentStatus)) {
+            throw new Error(
+                `Case with ID ${caseId} is not in a valid status. Expected: ${validStatuses.join(', ')}, but got: ${currentStatus}.`
+            )
         }
 
         return caseToUpdate
@@ -121,7 +126,7 @@ export class SosService {
             //send SOS signal to RCs
             const teamIds = availableTeams.map((team) => team.user_id)
             const notification = {
-                type: 'sos_request',
+                type: NotificationType.SOS_REQUEST,
                 message: `SOS request received for location (${latitude}, ${longitude}).`
             }
 
@@ -209,7 +214,7 @@ export class SosService {
             // Notify all teams in the SOS list
             const allNearestTeamIds = await this.getNearestTeamIds(caseToUpdate.sos_list || [])
             const notification = {
-                type: 'case_cancelled',
+                type: NotificationType.CASE_SAFE,
                 message: `Case ${caseId} has been marked as cancelled. The user is safe.`
             }
 
@@ -231,6 +236,8 @@ export class SosService {
 
             console.log(`Case ${caseId} has been accepted by team ${teamId}.`)
 
+            await RescueTeam.update({ status: 'busy' }, { where: { user_id: teamId } })
+
             const userId = caseToUpdate.from_id
 
             // Notify other rescue teams
@@ -239,12 +246,12 @@ export class SosService {
             const remainingTeamIds = Array.from(allNearestTeamIds).filter((id) => id !== teamId)
 
             const userNotification = {
-                type: 'case_accepted',
+                type: NotificationType.CASE_ACCEPTED,
                 message: `Your case ${caseId} has been accepted by a rescue team (${teamId}).`
             }
 
             const teamNotification = {
-                type: 'case_accepted',
+                type: NotificationType.CASE_ACCEPTED,
                 message: `Case ${caseId} has been accepted by team ${teamId}.`
             }
 
@@ -279,12 +286,12 @@ export class SosService {
             const userId = caseToUpdate.from_id
 
             const teamNotification = {
-                type: 'case_rejected',
+                type: NotificationType.CASE_REJECTED,
                 message: `Case ${caseId} has been rejected by team ${teamId}.`
             }
 
             const userNotification = {
-                type: 'case_rejected',
+                type: NotificationType.CASE_REJECTED,
                 message: `Case ${caseId} has been rejected by team ${teamId}.`
             }
 
@@ -313,11 +320,16 @@ export class SosService {
             if (caseToUpdate.dataValues.status === newStatus) {
                 throw new Error(`Case ${caseId} is already in status ${newStatus}.`)
             }
+            if (newStatus === CaseStatus.COMPLETED || newStatus === CaseStatus.CANCELLED) {
+                throw new Error(
+                    `Cannot change status to ${newStatus}. Please use the dedicated API for completing or cancelling a case with a reason or description.`
+                )
+            }
             // Validate status transition
             const validTransitions: Record<CaseStatus, CaseStatus[]> = {
                 [CaseStatus.PENDING]: [CaseStatus.ACCEPTED],
                 [CaseStatus.ACCEPTED]: [CaseStatus.READY],
-                [CaseStatus.READY]: [CaseStatus.COMPLETED],
+                [CaseStatus.READY]: [],
                 [CaseStatus.COMPLETED]: [],
                 [CaseStatus.CANCELLED]: []
             }
@@ -354,7 +366,7 @@ export class SosService {
 
             const userId = caseToUpdate.dataValues.from_id
             const notification = {
-                type: 'case_status_updated',
+                type: NotificationType.CASE_STATUS_UPDATED,
                 message: `The status of your case ${caseId} has been updated to ${newStatus} by the rescue team.`
             }
 
@@ -362,6 +374,58 @@ export class SosService {
         } catch (error: any) {
             console.error('Error changing case status:', error)
             throw new Error(`Failed to change case status: ${error.message}`)
+        }
+    }
+
+    public async cancelCaseByRescueTeam(teamId: number, caseId: number, reason: string): Promise<void> {
+        try {
+            const caseToUpdate = await this.validateCaseStatus(caseId, [CaseStatus.ACCEPTED, CaseStatus.READY])
+
+            await caseToUpdate.update({
+                status: CaseStatus.CANCELLED,
+                cancelled_at: new Date(),
+                cancelled_reason: reason
+            })
+
+            console.log(`Case ${caseId} has been marked as cancelled by team ${teamId}.`)
+            await RescueTeam.update({ status: 'available' }, { where: { user_id: teamId } })
+            const userId = caseToUpdate.from_id
+            const notification = {
+                type: NotificationType.CASE_CANCELLED,
+                message: `Your case ${caseId} has been marked as cancelled by the rescue team ${teamId}. Reason: ${reason}`
+            }
+
+            await this.sendNotificationToUser([userId], notification)
+        } catch (error: any) {
+            console.error('Error cancelling case:', error)
+            throw new Error(`Failed to cancel case: ${error.message}`)
+        }
+    }
+
+    public async completedCase(teamId: number, caseId: number, description: string): Promise<void> {
+        try {
+            const caseToUpdate = await this.validateCaseStatus(caseId, CaseStatus.READY)
+
+            await caseToUpdate.update({
+                status: CaseStatus.COMPLETED,
+                completed_at: new Date(),
+                completed_description: description
+            })
+
+            console.log(`Case ${caseId} has been marked as completed by team ${teamId}. Description: ${description}`)
+
+            await RescueTeam.update({ status: 'available' }, { where: { user_id: teamId } })
+
+            const userId = caseToUpdate.from_id
+            const notification = {
+                type: NotificationType.CASE_COMPLETED,
+                message: `Your case ${caseId} has been marked as completed by the rescue team (${teamId}). Description: ${description}`
+            }
+
+            await this.sendNotificationToUser([userId], notification)
+        } catch (error: any) {
+            console.error('Error marking case as completed:', error)
+            throw new Error(`Failed to mark case as completed: ${error.message}`)
         }
     }
 }

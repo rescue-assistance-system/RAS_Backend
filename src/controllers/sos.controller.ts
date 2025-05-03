@@ -109,4 +109,40 @@ export class SosController {
             res.status(500).json(createResponse('error', null, error.message || 'Failed to update case status.'))
         }
     }
+
+    public async cancelCaseByRescueTeam(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            const { caseId, reason } = req.body
+            if (!teamId || !caseId) {
+                return res
+                    .status(400)
+                    .json(createResponse('error', null, 'Team ID and Case ID are required in Access Token'))
+            }
+
+            await this.sosService.cancelCaseByRescueTeam(teamId, caseId, reason)
+            res.status(200).json(createResponse('success', null, 'SOS request cancelled successfully'))
+        } catch (error: any) {
+            console.error('Error cancelling SOS request:', error)
+            res.status(500).json(createResponse('error', null, 'Failed to cancel SOS request'))
+        }
+    }
+
+    public async completedCase(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            const { caseId, description } = req.body
+            if (!teamId || !caseId) {
+                return res
+                    .status(400)
+                    .json(createResponse('error', null, 'Team ID and Case ID are required in Access Token'))
+            }
+
+            await this.sosService.completedCase(teamId, caseId, description)
+            res.status(200).json(createResponse('success', null, 'SOS request completed successfully'))
+        } catch (error: any) {
+            console.error('Error completing SOS request:', error)
+            res.status(500).json(createResponse('error', null, 'Failed to complete SOS request'))
+        }
+    }
 }

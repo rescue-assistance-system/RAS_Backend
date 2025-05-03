@@ -62,6 +62,14 @@ CasesReport.init(
         rejected_team_ids: {
             type: DataTypes.ARRAY(DataTypes.INTEGER),
             allowNull: true
+        },
+        cancelled_reason: {
+            type: DataTypes.STRING(255),
+            allowNull: true
+        },
+        completed_description: {
+            type: DataTypes.STRING(255),
+            allowNull: true
         }
     },
     {
