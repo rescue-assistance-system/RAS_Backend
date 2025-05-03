@@ -128,4 +128,15 @@ export class SocketService {
         const onlineUsers = await SocketManager.getListOnlineUsers(userIds)
         return onlineUsers
     }
+
+    public async sendToOnlineUsers(userIds: string[], event: string, payload: any): Promise<void> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        const socketIds = await SocketManager.getListOfSocketIds(userIds)
+        if (socketIds.length > 0) {
+            this.io.to(socketIds).emit(event, payload)
+            console.log(`Notification sent to online users: ${userIds.join(', ')}`)
+        } else {
+            console.log('No online users found.')
+        }
+    }
 }

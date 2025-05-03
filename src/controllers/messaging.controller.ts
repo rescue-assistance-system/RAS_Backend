@@ -1,4 +1,4 @@
-import { Role } from '~/enums/role'
+import { Role } from '../enums/role'
 import { handleApiError } from '~/middleware/ErrorHandler'
 import { MessagingService } from '~/services/messagingService'
 import { createResponse } from '~/utils/response.utils'

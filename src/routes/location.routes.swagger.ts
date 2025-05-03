@@ -105,8 +105,7 @@ router.post('/update-location', locationController.updateLocation.bind(locationC
  *                   type: string
  *                   example: User ID, toUserId are required
  */
-router.get('/ask-user-location/:toUserId', locationController.askUserLocation.bind(locationController));
-
+router.get('/ask-user-location/:toUserId', locationController.askUserLocation.bind(locationController))
 
 /**
  * @swagger

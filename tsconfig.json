@@ -13,7 +13,7 @@
             "~/*": ["src/*"] // Đường dẫn tương đối cho các import (alias)
         },
         "resolveJsonModule": true,
-        "typeRoots": ["./types", "./node_modules/@types"],
+        "typeRoots": ["./types", "./node_modules/@types"]
     },
     "files": ["type.d.ts"],
     "include": ["src/**/*"]

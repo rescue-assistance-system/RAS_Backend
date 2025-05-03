@@ -2,7 +2,7 @@ import cron from 'node-cron'
 import { Op } from 'sequelize'
 import CasesReport from '~/database/models/case_report.model'
 import SosRequest from '~/database/models/sos.model'
-import { CaseStatus } from '~/enums/case-status.enum'
+import { CaseStatus } from '../enums/case-status.enum'
 
 const ONE_HOUR_MS = 60 * 60 * 1000 // 1 hour
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
