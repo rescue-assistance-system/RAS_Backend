@@ -145,4 +145,24 @@ export class SosController {
             res.status(500).json(createResponse('error', null, 'Failed to complete SOS request'))
         }
     }
+
+    public async assignRescueTeam(req: Request, res: Response): Promise<void> {
+        try {
+            const { caseId, teamId } = req.body
+            const coordinatorId = req.user?.user_id // Lấy ID của Coordinator từ token (middleware)
+            console.log('Request body:', req.body)
+            console.log('Coordinator ID:', coordinatorId)
+            if (!caseId || !teamId) {
+                res.status(400).json({ message: 'caseId and teamId are required.' })
+                return
+            }
+
+            await this.sosService.assignTeamToCase(teamId, caseId, coordinatorId)
+
+            res.status(200).json({ message: `Case ${caseId} has been assigned to team ${teamId}.` })
+        } catch (error: any) {
+            console.error('Error assigning rescue team:', error)
+            res.status(500).json({ message: error.message })
+        }
+    }
 }

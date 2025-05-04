@@ -12,7 +12,7 @@ export interface JWTPayload {
 
 export const generateAccessToken = (payload: JWTPayload): string => {
     console.log(payload.user_id, payload.device_id)
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' })
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '5d' })
 }
 
 export const generateRefreshToken = (payload: JWTPayload): string => {

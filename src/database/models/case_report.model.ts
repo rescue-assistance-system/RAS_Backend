@@ -70,6 +70,10 @@ CasesReport.init(
         completed_description: {
             type: DataTypes.STRING(255),
             allowNull: true
+        },
+        assigned_by: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }
     },
     {

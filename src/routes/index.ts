@@ -28,4 +28,11 @@ router.use('/news-categories', newsCategoryRoutes)
 router.use('/news', newsRoutes)
 router.use('/first-aid-categories', firstAidCategoryRoutes)
 router.use('/first-aid-guides', firstAidGuideRoutes)
+
+router.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'Server is running!'
+    })
+})
 export default router

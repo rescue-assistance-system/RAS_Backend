@@ -7,6 +7,9 @@ import CasesReport from '~/database/models/case_report.model'
 import SosRequest from '~/database/models/sos.model'
 import { CaseStatus } from '../enums/case-status.enum'
 import { NotificationType } from '~/enums/notification-types.enum'
+import Tracking from '~/database/models/tracking.model'
+import { TrackingService } from './tracking.service'
+import { assign } from 'nodemailer/lib/shared'
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -132,6 +135,20 @@ export class SosService {
 
             await this.sendNotificationToUser(teamIds, notification)
             notifiedTeamIds.push(...teamIds.map((id) => id.toString()))
+
+            //send SOS signal to trackers
+            const trackingService = new TrackingService()
+            const trackers = await trackingService.getTrackers(parseInt(userId))
+            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (activeTrackers.length > 0) {
+                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+                const trackingNotification = {
+                    type: NotificationType.SOS_REQUEST,
+                    message: ` SOS request received for location (${latitude}, ${longitude}).`,
+                    address
+                }
+                await this.sendNotificationToUser(trackerIds, trackingNotification)
+            }
 
             const nearestTeamIds = notifiedTeamIds
                 .map((id) => {
@@ -426,6 +443,59 @@ export class SosService {
         } catch (error: any) {
             console.error('Error marking case as completed:', error)
             throw new Error(`Failed to mark case as completed: ${error.message}`)
+        }
+    }
+
+    public async assignTeamToCase(teamId: number, caseId: number, coordinatorId: number): Promise<void> {
+        try {
+            const caseToUpdate = await CasesReport.findOne({
+                where: { id: caseId }
+            })
+
+            if (!caseToUpdate) {
+                throw new Error(`Case with ID ${caseId} not found.`)
+            }
+
+            if (caseToUpdate.dataValues.accepted_team_id !== null) {
+                throw new Error(`Case ${caseId} has already been assigned to a team.`)
+            }
+
+            const rescueTeam = await RescueTeam.findOne({
+                where: { user_id: teamId }
+            })
+
+            if (!rescueTeam) {
+                throw new Error(`Rescue team with ID ${teamId} not found.`)
+            }
+            if (rescueTeam.dataValues.status === 'busy') {
+                throw new Error(
+                    `Rescue team with ID ${teamId} is currently busy and cannot be assigned to case ${caseId}.`
+                )
+            }
+
+            await caseToUpdate.update({
+                status: CaseStatus.ACCEPTED,
+                accepted_team_id: teamId,
+                accepted_at: new Date(),
+                assigned_by: coordinatorId
+            })
+            console.log(`Case ${caseId} has been assigned to team ${teamId} by coordinator ${coordinatorId}.`)
+            await RescueTeam.update({ status: 'busy' }, { where: { user_id: teamId } })
+            const notification = {
+                type: NotificationType.CASE_ASSIGNED,
+                message: `You have been assigned to case ${caseId} by the coordinator.`
+            }
+            await this.sendNotificationToUser([teamId], notification)
+
+            const userId = caseToUpdate.dataValues.from_id
+            const userNotification = {
+                type: NotificationType.CASE_ASSIGNED,
+                message: `Your case ${caseId} has been assigned to a rescue team by the coordinator.`
+            }
+            await this.sendNotificationToUser([userId], userNotification)
+        } catch (error: any) {
+            console.error('Error assigning team to case:', error)
+            throw new Error(`Failed to assign team to case: ${error.message}`)
         }
     }
 }
