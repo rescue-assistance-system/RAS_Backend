@@ -415,4 +415,72 @@ router.post('/cancel', sosController.cancelCaseByRescueTeam.bind(sosController))
  */
 router.post('/completed', sosController.completedCase.bind(sosController))
 
+/**
+ * @swagger
+ * /sos/assign:
+ *   post:
+ *     summary: Assign a rescue team to a cancelled case
+ *     description: Allows a coordinator to assign a rescue team to a case that has been cancelled or requires reassignment.
+ *     tags:
+ *       - Coordinator
+ *     security:
+ *       - bearerAuth: [] # Requires authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - caseId
+ *               - teamId
+ *             properties:
+ *               caseId:
+ *                 type: number
+ *                 description: The ID of the case to assign a rescue team to.
+ *                 example: 123
+ *               teamId:
+ *                 type: number
+ *                 description: The ID of the rescue team to assign to the case.
+ *                 example: 456
+ *     responses:
+ *       200:
+ *         description: Rescue team assigned successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               example:
+ *                 status: success
+ *                 message: "Case 123 has been assigned to team 456."
+ *       400:
+ *         description: Invalid input or missing parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               example:
+ *                 status: error
+ *                 message: "caseId and teamId are required."
+ *       404:
+ *         description: Case not found or not in CANCELLED status.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               example:
+ *                 status: error
+ *                 message: "Case with ID 123 not found or is not in CANCELLED status."
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               example:
+ *                 status: error
+ *                 message: "Failed to assign rescue team: <error details>"
+ */
+router.post('/assign', sosController.assignRescueTeam.bind(sosController));
+
 export default router

@@ -5,5 +5,6 @@ export enum NotificationType {
     CASE_ACCEPTED = 'case_accepted',
     CASE_REJECTED = 'case_rejected',
     CASE_STATUS_UPDATED = 'case_status_updated',
-    SOS_REQUEST = 'sos_request'
+    SOS_REQUEST = 'sos_request',
+    CASE_ASSIGNED = 'case_assigned'
 }
