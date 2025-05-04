@@ -9,6 +9,7 @@ class Message extends Model {
     public contentType!: string
     public sender_name?: string
     public case_id!: number
+    public avatar?: string
 }
 
 Message.init(

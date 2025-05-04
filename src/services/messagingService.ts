@@ -7,7 +7,7 @@ import { NotificationService } from './notification.service'
 import SosRequest from '~/database/models/sos.model'
 import { Role } from '../enums/Role'
 import { ConversationPaging, Paging } from '~/dtos/paging'
-import { Op } from 'sequelize'
+import { QueryTypes } from 'sequelize'
 
 export class MessagingService {
     async sendMessage(
@@ -84,18 +84,27 @@ export class MessagingService {
     ): Promise<ConversationPaging<MessageDTO> | null> {
         const cases = await CasesReport.findAll({
             where: { from_id: userId },
-            attributes: ['id']
+            attributes: ['id', 'accepted_team_id']
         })
         if (!cases || cases.length === 0) {
             return null
         }
 
-        const caseIds = cases.map((caseReport) => caseReport.dataValues.id)
+        // Create map or set caseIds and acceptedTeamIds to avoid duplicates
+        const caseIds: number[] = []
+        const acceptedTeamIds = []
+
+        cases.forEach((caseReport) => {
+            const { id, accepted_team_id } = caseReport.dataValues
+            caseIds.push(id)
+            acceptedTeamIds.push(accepted_team_id)
+        })
+
         const totalItems = caseIds.length
         const offset = (page - 1) * limit
         const messages = await sequelize.query(
             `
-            SELECT m.*
+            SELECT m.*, u.username AS sender_name, u.avatar AS avatar
             FROM messages m
             INNER JOIN (
                 SELECT case_id, MAX(created_at) AS max_created_at
@@ -104,6 +113,8 @@ export class MessagingService {
                 GROUP BY case_id
             ) latest
             ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
+            INNER JOIN cases_report c ON m.case_id = c.id
+            INNER JOIN accounts_ras_sys u ON c.accepted_team_id = u.id
             ORDER BY m.created_at DESC
             LIMIT :limit OFFSET :offset
             `,
@@ -113,14 +124,16 @@ export class MessagingService {
                     limit,
                     offset
                 },
-                model: Message,
-                mapToModel: true
+                type: QueryTypes.SELECT // Important: Don't use model: Message when adding custom fields
             }
         )
+
         if (!messages || messages.length === 0) {
             return null
         }
-        const content = messages.map((message) => convertToMessageDTO(message.dataValues))
+        const content = messages.map((message) => {
+            return convertToMessageDTO(message as Message)
+        })
         return new ConversationPaging<MessageDTO>(content, totalItems, page, limit)
     }
 
@@ -142,9 +155,33 @@ export class MessagingService {
 
         const caseIds = cases.map((caseReport) => caseReport.dataValues.id)
         const totalItems = caseIds.length
+        // const messages = await sequelize.query(
+        //     `
+        //     SELECT m.*
+        //     FROM messages m
+        //     INNER JOIN (
+        //         SELECT case_id, MAX(created_at) AS max_created_at
+        //         FROM messages
+        //         WHERE case_id IN (:caseIds)
+        //         GROUP BY case_id
+        //     ) latest
+        //     ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
+        //     ORDER BY m.created_at DESC
+        //     LIMIT :limit OFFSET :offset
+        //     `,
+        //     {
+        //         replacements: {
+        //             caseIds,
+        //             limit,
+        //             offset
+        //         },
+        //         model: Message,
+        //         mapToModel: true
+        //     }
+        // )
         const messages = await sequelize.query(
             `
-            SELECT m.*
+            SELECT m.*, u.username AS sender_name, u.avatar AS avatar
             FROM messages m
             INNER JOIN (
                 SELECT case_id, MAX(created_at) AS max_created_at
@@ -153,6 +190,8 @@ export class MessagingService {
                 GROUP BY case_id
             ) latest
             ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
+            INNER JOIN cases_report c ON m.case_id = c.id
+            LEFT JOIN accounts_ras_sys u ON c.from_id = u.id
             ORDER BY m.created_at DESC
             LIMIT :limit OFFSET :offset
             `,
@@ -162,8 +201,7 @@ export class MessagingService {
                     limit,
                     offset
                 },
-                model: Message,
-                mapToModel: true
+                type: QueryTypes.SELECT // Important: Don't use model: Message when adding custom fields
             }
         )
 
@@ -171,7 +209,9 @@ export class MessagingService {
             return null
         }
 
-        const content = messages.map((message) => convertToMessageDTO(message.dataValues))
+        const content = messages.map((message) => {
+            return convertToMessageDTO(message as Message)
+        })
         return new ConversationPaging<MessageDTO>(content, totalItems, page, limit)
     }
 
