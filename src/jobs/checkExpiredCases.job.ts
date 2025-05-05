@@ -26,14 +26,13 @@ cron.schedule('* * * * *', async () => {
             where: {
                 status: CaseStatus.PENDING,
                 created_at: {
-                    [Op.lt]: new Date(Date.now() - ONE_HOUR_MS), // Case older 1 hour
+                    // [Op.lte]: new Date(Date.now() - 10 * 60 * 1000), // Case older than 1 hour
                     [Op.gte]: new Date(Date.now() - ONE_DAY_MS) // Case within 1 day
                 }
             }
         })
+        console.log(`Pending cases older than 10 minutes and within a day: ${pendingCases.length}`)
         console.log(`New Date: ${new Date()}`)
-        console.log(`Date now - 1 hour: ${new Date(Date.now() - ONE_HOUR_MS)}`)
-        console.log(`Date now - 1 day: ${new Date(Date.now() - ONE_DAY_MS)}`)
         console.log(`Found ${pendingCases.length} pending cases older than 1 hour and within a day.`)
 
         for (const caseItem of pendingCases) {
@@ -60,21 +59,22 @@ async function processCase(caseItem: any): Promise<void> {
         })
 
         if (lastSos && lastSos.created_at) {
-            const createdAt = dayjs(lastSos.created_at).tz('Asia/Ho_Chi_Minh') //
+            const createdAt = dayjs(lastSos.created_at).add(7, 'hour')
             const currentTime = dayjs().tz('Asia/Ho_Chi_Minh')
-            const timeDiff = currentTime.diff(createdAt, 'hour') //
+            const timeDiffMinutes = currentTime.diff(createdAt, 'minute')
+            const timeDiffHours = currentTime.diff(createdAt, 'hour')
 
             console.log(`Last SOS created at: ${createdAt.format()}`)
-            console.log(`Current time: ${currentTime.format()}`)
-            console.log(`Time difference: ${timeDiff} hours`)
-
-            if (timeDiff >= 1) {
-                //Update case status to CANCELLED
-                await caseItem.update({ status: CaseStatus.CANCELLED, cancelled_at: new Date() })
-                console.log(`Case with ID ${caseItem.id} has been marked as cancelled.`)
-
+            console.log(`Time difference: ${timeDiffMinutes} minutes (${timeDiffHours} hours)`)
+            console.log(`Case ID: ${caseItem.id}`)
+            if (timeDiffMinutes >= 10 && timeDiffHours < 1) {
                 // Send notification to Coordinator
                 await notifyCoordinator(caseItem.id)
+            }
+            if (timeDiffHours >= 1) {
+                //Update case status to CANCELLED
+                await caseItem.update({ status: CaseStatus.EXPIRED, cancelled_at: new Date() })
+                console.log(`Case with ID ${caseItem.id} has been marked as cancelled.`)
             }
         } else {
             console.error(`Invalid last SOS or created_at for case ID ${caseItem.id}`)
@@ -87,25 +87,25 @@ async function processCase(caseItem: any): Promise<void> {
 // Function to notify Coordinators about the cancelled case
 async function notifyCoordinator(caseId: number): Promise<void> {
     try {
-        const sosService = new SosService();
-        const coordinators = await getCoordinators(); // Lấy danh sách ID của Coordinator
+        const sosService = new SosService()
+        const coordinators = await getCoordinators() 
 
         if (coordinators.length === 0) {
-            console.log(`No coordinators found for case ID ${caseId}.`);
-            return;
+            console.log(`No coordinators found for case ID ${caseId}.`)
+            return
         }
 
-        console.log(`Coordinators: ${coordinators.join(', ')}`);
+        console.log(`Coordinators: ${coordinators.join(', ')}`)
 
         const notification = {
             type: 'case_cancelled',
             message: `Case ${caseId} has been cancelled due to expiration.`
-        };
+        }
 
-        await sosService.sendNotificationToUser(coordinators, notification);
-        console.log(`Notified Coordinators about cancelled case ${caseId}.`);
+        await sosService.sendNotificationToUser(coordinators, notification)
+        console.log(`Notified Coordinators about cancelled case ${caseId}.`)
     } catch (error) {
-        console.error(`Error notifying Coordinators for case ID ${caseId}:`, error);
+        console.error(`Error notifying Coordinators for case ID ${caseId}:`, error)
     }
 }
 // Function to get list of Coordinators
@@ -114,15 +114,15 @@ async function getCoordinators(): Promise<number[]> {
         where: { role: Role.COORDINATOR },
         attributes: ['id'],
         raw: true
-    });
+    })
 
-    console.log(`Raw coordinators data: ${JSON.stringify(coordinators)}`);
+    console.log(`Raw coordinators data: ${JSON.stringify(coordinators)}`)
 
     const coordinatorIds = coordinators
         .map((coordinator) => coordinator.id)
-        .filter((id): id is number => id !== null && id !== undefined); // Lọc bỏ giá trị null hoặc undefined
+        .filter((id): id is number => id !== null && id !== undefined) 
 
-    console.log(`Found ${coordinatorIds.length} coordinators.`);
-    console.log(`Coordinator IDs: ${coordinatorIds.join(', ')}`);
-    return coordinatorIds;
+    console.log(`Found ${coordinatorIds.length} coordinators.`)
+    console.log(`Coordinator IDs: ${coordinatorIds.join(', ')}`)
+    return coordinatorIds
 }

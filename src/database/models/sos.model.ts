@@ -1,6 +1,7 @@
 import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
 import CasesReport from './case_report.model'
+import User from './user.model'
 
 class SosRequest extends Model {
     // public id!: number
@@ -62,5 +63,6 @@ SosRequest.init(
 
 // Associations
 SosRequest.belongsTo(CasesReport, { foreignKey: 'case_id', as: 'case' })
+SosRequest.belongsTo(User, { foreignKey: 'user_id', as: 'user' })
 
 export default SosRequest

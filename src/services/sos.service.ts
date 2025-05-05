@@ -7,9 +7,8 @@ import CasesReport from '~/database/models/case_report.model'
 import SosRequest from '~/database/models/sos.model'
 import { CaseStatus } from '../enums/case-status.enum'
 import { NotificationType } from '~/enums/notification-types.enum'
-import Tracking from '~/database/models/tracking.model'
 import { TrackingService } from './tracking.service'
-import { assign } from 'nodemailer/lib/shared'
+import { Op } from 'sequelize'
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -225,7 +224,7 @@ export class SosService {
         try {
             const caseToUpdate = await this.validateCaseStatus(caseId, CaseStatus.PENDING)
 
-            await caseToUpdate.update({ status: CaseStatus.CANCELLED, cancelled_at: new Date() })
+            await caseToUpdate.update({ status: CaseStatus.SAFE, cancelled_at: new Date() })
             console.log(`Case ${caseId} marked as cancelled.`)
 
             // Notify all teams in the SOS list
@@ -457,7 +456,9 @@ export class SosService {
             }
 
             if (caseToUpdate.dataValues.accepted_team_id !== null) {
-                throw new Error(`Case ${caseId} has already been assigned to a team.`)
+                throw new Error(
+                    `Case ${caseId} has already been assigned to a team : ${caseToUpdate.dataValues.accepted_team_id}. `
+                )
             }
 
             const rescueTeam = await RescueTeam.findOne({
@@ -496,6 +497,143 @@ export class SosService {
         } catch (error: any) {
             console.error('Error assigning team to case:', error)
             throw new Error(`Failed to assign team to case: ${error.message}`)
+        }
+    }
+
+    public async getSosRequestById(sosId: number): Promise<SosResponseDto | null> {
+        try {
+            const sosRequest = await SosRequest.findOne({
+                where: { id: sosId },
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'name', 'email']
+                    },
+                    {
+                        model: CasesReport,
+                        as: 'caseReport',
+                        attributes: ['id', 'status']
+                    }
+                ],
+                order: [['created_at', 'DESC']]
+            })
+
+            if (!sosRequest) {
+                return null
+            }
+
+            return sosRequest.toJSON() as SosResponseDto
+        } catch (error: any) {
+            console.error('Error fetching SOS request:', error)
+            throw new Error(`Failed to fetch SOS request: ${error.message}`)
+        }
+    }
+
+    public async getAllSosRequestsForTeam(teamId: number): Promise<SosResponseDto[]> {
+        try {
+            const sosRequests = await SosRequest.findAll({
+                where: { nearest_team_ids: { [Op.contains]: [teamId] }, case_id: { [Op.ne]: null } },
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username', 'email']
+                    },
+                    {
+                        model: CasesReport,
+                        as: 'case',
+                        attributes: ['id', 'status', 'created_at']
+                    }
+                ],
+                order: [['created_at', 'DESC']]
+            })
+
+            const casesMap: Record<number, any> = {}
+            sosRequests.forEach((sos) => {
+                const caseId = sos.case_id
+                if (!caseId) return
+
+                if (!casesMap[caseId]) {
+                    casesMap[caseId] = {
+                        case: sos.case,
+                        user: sos.user,
+                        sosRequests: []
+                    }
+                }
+
+                casesMap[caseId].sosRequests.push({
+                    id: sos.id,
+                    user_id: sos.user_id,
+                    latitude: sos.latitude,
+                    longitude: sos.longitude,
+                    created_at: sos.created_at
+                    // updated_at: sos.updated_at,
+                    // nearest_team_ids: sos.nearest_team_ids
+                })
+            })
+
+            const sortedCases = Object.values(casesMap).sort((a: any, b: any) => {
+                return new Date(b.case.created_at).getTime() - new Date(a.case.created_at).getTime()
+            })
+
+            return sortedCases
+        } catch (error: any) {
+            console.error('Error fetching SOS requests for team:', error)
+            throw new Error(`Failed to fetch SOS requests for team: ${error.message}`)
+        }
+    }
+
+    public async getUserCases(userId: number): Promise<SosResponseDto[]> {
+        try {
+            const sosRequests = await SosRequest.findAll({
+                where: { user_id: userId, case_id: { [Op.ne]: null } },
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username', 'email']
+                    },
+                    {
+                        model: CasesReport,
+                        as: 'case',
+                        attributes: ['id', 'status', 'created_at']
+                    }
+                ],
+                order: [['created_at', 'DESC']]
+            })
+
+            const casesMap: Record<number, any> = {}
+            sosRequests.forEach((sos) => {
+                const caseId = sos.case_id
+                if (!caseId) return
+
+                if (!casesMap[caseId]) {
+                    casesMap[caseId] = {
+                        case: sos.case,
+                        sosRequests: []
+                    }
+                }
+
+                casesMap[caseId].sosRequests.push({
+                    id: sos.id,
+                    user_id: sos.user_id,
+                    latitude: sos.latitude,
+                    longitude: sos.longitude,
+                    created_at: sos.created_at,
+                    updated_at: sos.updated_at,
+                    nearest_team_ids: sos.nearest_team_ids
+                })
+            })
+
+            const sortedCases = Object.values(casesMap).sort((a: any, b: any) => {
+                return new Date(b.case.created_at).getTime() - new Date(a.case.created_at).getTime()
+            })
+
+            return sortedCases
+        } catch (error: any) {
+            console.error('Error fetching user cases:', error)
+            throw new Error(`Failed to fetch user cases: ${error.message}`)
         }
     }
 }

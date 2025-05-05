@@ -1,6 +1,5 @@
 import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
-
 class User extends Model {
     public id!: number
     public username!: string
@@ -110,5 +109,5 @@ User.init(
         underscored: true
     }
 )
-
+// User.hasMany(SosRequest, { foreignKey: 'user_id', as: 'sosRequests' })
 export default User
