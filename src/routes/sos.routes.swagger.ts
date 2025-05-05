@@ -85,7 +85,7 @@ router.post('/send', sosController.sendSos.bind(sosController))
  *                 example: 35
  *     responses:
  *       200:
- *         description: Case marked as cancelled successfully
+ *         description: Case marked as Safe successfully
  *         content:
  *           application/json:
  *             schema:
@@ -417,6 +417,175 @@ router.post('/completed', sosController.completedCase.bind(sosController))
 
 /**
  * @swagger
+ * /sos/requests/team:
+ *   get:
+ *     summary: Get all SOS requests grouped by case for a rescue team
+ *     description: Lấy danh sách các SOS requests được nhóm theo case dành cho một rescue team cụ thể.
+ *     tags:
+ *       - SOS
+ *     security:
+ *       - bearerAuth: [] # Requires authentication
+ *     parameters:
+ *       - in: query
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của rescue team.
+ *     responses:
+ *       200:
+ *         description: Danh sách các SOS requests được nhóm theo case.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       case:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID của case.
+ *                           status:
+ *                             type: string
+ *                             description: Trạng thái của case.
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: Thời gian tạo case.
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID của user.
+ *                           username:
+ *                             type: string
+ *                             description: Tên người dùng.
+ *                           email:
+ *                             type: string
+ *                             description: Email của người dùng.
+ *                       sosRequests:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               description: ID của SOS request.
+ *                             user_id:
+ *                               type: integer
+ *                               description: ID của user gửi SOS.
+ *                             latitude:
+ *                               type: string
+ *                               description: Vĩ độ của SOS request.
+ *                             longitude:
+ *                               type: string
+ *                               description: Kinh độ của SOS request.
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               description: Thời gian tạo SOS request.
+ *       400:
+ *         description: Lỗi khi không tìm thấy teamId hoặc dữ liệu không hợp lệ.
+ *       500:
+ *         description: Lỗi server.
+ */
+router.get('/requests/team', sosController.getAllSosRequestsForTeam.bind(sosController))
+
+/**
+ * @swagger
+ * /sos/user/cases:
+ *   get:
+ *     summary: Get all cases for a user
+ *     description: Lấy danh sách tất cả các case mà một user đã tạo.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: [] # Requires authentication
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của user.
+ *     responses:
+ *       200:
+ *         description: Danh sách các case của user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       case:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID của case.
+ *                           status:
+ *                             type: string
+ *                             description: Trạng thái của case.
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: Thời gian tạo case.
+ *                       sosRequests:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               description: ID của SOS request.
+ *                             user_id:
+ *                               type: integer
+ *                               description: ID của user gửi SOS.
+ *                             latitude:
+ *                               type: string
+ *                               description: Vĩ độ của SOS request.
+ *                             longitude:
+ *                               type: string
+ *                               description: Kinh độ của SOS request.
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               description: Thời gian tạo SOS request.
+ *                             updated_at:
+ *                               type: string
+ *                               format: date-time
+ *                               description: Thời gian cập nhật SOS request.
+ *                             nearest_team_ids:
+ *                               type: array
+ *                               items:
+ *                                 type: integer
+ *                               description: Danh sách ID của các rescue team gần nhất.
+ *       400:
+ *         description: Lỗi khi không tìm thấy userId hoặc dữ liệu không hợp lệ.
+ *       500:
+ *         description: Lỗi server.
+ */
+router.get('/user/cases', sosController.getUserCases.bind(sosController))
+
+/**
+ * @swagger
  * /sos/assign:
  *   post:
  *     summary: Assign a rescue team to a cancelled case
@@ -481,6 +650,6 @@ router.post('/completed', sosController.completedCase.bind(sosController))
  *                 status: error
  *                 message: "Failed to assign rescue team: <error details>"
  */
-router.post('/assign', sosController.assignRescueTeam.bind(sosController));
+router.post('/assign', sosController.assignRescueTeam.bind(sosController))
 
 export default router

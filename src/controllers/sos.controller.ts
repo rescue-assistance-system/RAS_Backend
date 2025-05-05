@@ -45,7 +45,7 @@ export class SosController {
             }
 
             await this.sosService.markSafe(caseId)
-            res.status(200).json(createResponse('success', null, 'Case marked as cancelled successfully'))
+            res.status(200).json(createResponse('success', null, 'Case marked as Safe successfully'))
         } catch (error: any) {
             console.error('Error marking case as cancelled:', error)
             res.status(500).json(createResponse('error', null, 'Failed to mark case as cancelled'))
@@ -163,6 +163,36 @@ export class SosController {
         } catch (error: any) {
             console.error('Error assigning rescue team:', error)
             res.status(500).json({ message: error.message })
+        }
+    }
+
+    public async getAllSosRequestsForTeam(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            if (!teamId) {
+                return res.status(400).json(createResponse('error', null, 'Team ID is required in Access Token'))
+            }
+
+            const sosRequests = await this.sosService.getAllSosRequestsForTeam(teamId)
+            res.status(200).json(createResponse('success', sosRequests, 'SOS requests retrieved successfully'))
+        } catch (error: any) {
+            console.error('Error retrieving SOS requests:', error)
+            res.status(500).json(createResponse('error', null, 'Failed to retrieve SOS requests'))
+        }
+    }
+
+    public async getUserCases(req: Request, res: Response) {
+        try {
+            const userId = req.user?.user_id
+            if (!userId) {
+                return res.status(400).json(createResponse('error', null, 'User ID is required in Access Token'))
+            }
+
+            const cases = await this.sosService.getUserCases(userId)
+            res.status(200).json(createResponse('success', cases, 'User cases retrieved successfully'))
+        } catch (error: any) {
+            console.error('Error retrieving user cases:', error)
+            res.status(500).json(createResponse('error', null, 'Failed to retrieve user cases'))
         }
     }
 }

@@ -3,5 +3,7 @@ export enum CaseStatus {
     CANCELLED = 'cancelled',
     PENDING = 'pending',
     READY = 'ready',
-    ACCEPTED = 'accepted'
+    ACCEPTED = 'accepted',
+    EXPIRED = 'expired',
+    SAFE = 'safe'
 }
