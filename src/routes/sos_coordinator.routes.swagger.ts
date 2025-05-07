@@ -56,7 +56,6 @@ router.get('/sos', authorize('coordinator'), controller.getAllSosRequestsForCoor
  */
 router.get('/sos/:sosId', authorize('coordinator'), controller.getSosRequestById.bind(controller))
 
-
 /**
  * @swagger
  * /coordinator/rescue-teams/available:
@@ -93,8 +92,7 @@ router.get('/sos/:sosId', authorize('coordinator'), controller.getSosRequestById
  *       500:
  *         description: Internal server error
  */
-router.get('/rescue-teams/available', authorize('coordinator'), controller.getAvailableRescueTeams.bind(controller));
-
+router.get('/rescue-teams/available', authorize('coordinator'), controller.getAvailableRescueTeams.bind(controller))
 
 /**
  * @swagger
@@ -185,4 +183,41 @@ router.post('/assign-team', authorize('coordinator'), controller.assignTeamToCas
  */
 router.post('/notifyTeamCase', authorize('coordinator'), controller.notifyRescueTeamOfCase.bind(controller))
 
+/**
+ * @swagger
+ * /coordinator/rescue-teams/locations:
+ *   get:
+ *     summary: Get locations of all rescue teams
+ *     tags:
+ *       - Coordinator SOS
+ *     responses:
+ *       200:
+ *         description: List of rescue team locations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID of the rescue team
+ *                   name:
+ *                     type: string
+ *                     description: Name of the rescue team
+ *                   latitude:
+ *                     type: number
+ *                     description: Latitude of the rescue team's location
+ *                   longitude:
+ *                     type: number
+ *                     description: Longitude of the rescue team's location
+ *                   status:
+ *                     type: string
+ *                     description: Status of the rescue team
+ *                     example: available
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/rescue-teams/locations', authorize('coordinator'), controller.getRescueTeamLocations.bind(controller))
 export default router

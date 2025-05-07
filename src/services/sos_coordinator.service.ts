@@ -58,13 +58,13 @@ export class CoordinatorSosService {
         try {
             const availableTeams = await RescueTeam.findAll({
                 where: { status: 'available' },
-                attributes: ['id', 'team_name', 'status', 'default_latitude', 'default_longitude'],
-            });
+                attributes: ['id', 'team_name', 'status', 'default_latitude', 'default_longitude']
+            })
 
-            return availableTeams;
+            return availableTeams
         } catch (error: any) {
-            console.error('Error fetching available rescue teams:', error);
-            throw new Error(`Failed to fetch available rescue teams: ${error.message}`);
+            console.error('Error fetching available rescue teams:', error)
+            throw new Error(`Failed to fetch available rescue teams: ${error.message}`)
         }
     }
 
@@ -181,35 +181,50 @@ export class CoordinatorSosService {
     }
     public async notifyRescueTeamOfCase(caseId: number, message: string): Promise<void> {
         try {
-            // Tìm case dựa trên caseId
             const caseToUpdate = await CasesReport.findOne({
                 where: { id: caseId },
-                attributes: ['id', 'accepted_team_id'] // Chỉ lấy các cột cần thiết
+                attributes: ['id', 'accepted_team_id']
             })
 
             if (!caseToUpdate) {
                 throw new Error(`Case with ID ${caseId} not found.`)
             }
 
-            // Lấy team đã accept case
             const acceptedTeamId = caseToUpdate.accepted_team_id
             if (!acceptedTeamId) {
                 throw new Error(`No team has accepted case with ID ${caseId}.`)
             }
 
-            // Tạo thông báo
             const notification = {
                 type: NotificationType.CASE_UPDATE,
                 message
             }
 
-            // Gửi thông báo đến team đã accept case
             await new SosService().sendNotificationToUser([acceptedTeamId], notification)
 
             console.log(`Notification sent to team ${acceptedTeamId} for case ${caseId}.`)
         } catch (error: any) {
             console.error('Error notifying rescue team:', error)
             throw new Error(`Failed to notify rescue team: ${error.message}`)
+        }
+    }
+
+    public async getRescueTeamLocations(): Promise<any[]> {
+        try {
+            const rescueTeams = await RescueTeam.findAll({
+                attributes: ['id', 'team_name', 'default_latitude', 'default_longitude', 'status']
+            })
+
+            return rescueTeams.map((team) => ({
+                id: team.id,
+                name: team.team_name,
+                latitude: team.default_latitude,
+                longitude: team.default_longitude,
+                status: team.status
+            }))
+        } catch (error: any) {
+            console.error('Error fetching rescue team locations:', error)
+            throw new Error(`Failed to fetch rescue team locations: ${error.message}`)
         }
     }
 }

@@ -77,4 +77,14 @@ export class SosCoordinatorController {
             handleApiError(res, error)
         }
     }
+
+    public getRescueTeamLocations = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const locations = await this.coordinatorSosService.getRescueTeamLocations();
+            res.status(200).json({ success: true, data: locations });
+        } catch (error: any) {
+            console.error('Error in getRescueTeamLocations:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    };
 }
