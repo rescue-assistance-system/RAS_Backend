@@ -143,6 +143,22 @@ class RescueTeamController {
             return res.status(404).json(createResponse('error', null, error.message))
         }
     }
+
+    public getRescueTeamMembers = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const userId = req.user?.user_id?.toString()
+            if (!userId) {
+                res.status(400).json({ success: false, message: 'User ID is required' })
+                return
+            }
+
+            const members = await rescueTeamService.getRescueTeamMembers(userId)
+            res.status(200).json({ success: true, data: members })
+        } catch (error: any) {
+            console.error('Error in getRescueTeamMembers:', error)
+            res.status(500).json({ success: false, message: error.message })
+        }
+    }
 }
 
 export default new RescueTeamController()
