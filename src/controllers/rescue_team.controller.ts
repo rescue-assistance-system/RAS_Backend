@@ -1,8 +1,13 @@
 import { Request, Response } from 'express'
 import rescueTeamService from '../services/rescue_teams.service'
 import { createResponse } from '../utils/response.utils'
-
+import { SosService } from '~/services/sos.service'
 class RescueTeamController {
+    private sosService: SosService
+
+    constructor() {
+        this.sosService = new SosService()
+    }
     async createProfile(req: Request, res: Response) {
         try {
             const userId = req.user?.user_id
@@ -158,6 +163,53 @@ class RescueTeamController {
         } catch (error: any) {
             console.error('Error in getRescueTeamMembers:', error)
             res.status(500).json({ success: false, message: error.message })
+        }
+    }
+
+    public async getAllSosRequestsForTeam(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            if (!teamId) {
+                return res.status(400).json(createResponse('error', null, 'Team ID is required in Access Token'))
+            }
+
+            const sosRequests = await this.sosService.getAllSosRequestsForTeam(teamId)
+            res.status(200).json(createResponse('success', sosRequests, 'SOS requests retrieved successfully'))
+        } catch (error: any) {
+            console.error('Error retrieving SOS requests:', error)
+            res.status(500).json(createResponse('error', null, 'Failed to retrieve SOS requests'))
+        }
+    }
+
+    public async getHistoryCaseDetails(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            if (!teamId) {
+                return res.status(401).json({ success: false, message: 'Unauthorized' })
+            }
+
+            const { caseId } = req.params
+            const history = await rescueTeamService.getHistoryCaseDetails(teamId, parseInt(caseId))
+            return res.status(200).json({ success: true, data: history })
+        } catch (error: any) {
+            console.error('Error fetching history case details:', error)
+            return res.status(500).json({ success: false, message: error.message })
+        }
+    }
+
+    async getRescueTeamHistory(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            if (!teamId) {
+                return res.status(401).json({ success: false, message: 'Unauthorized' })
+            }
+
+            const { limit } = req.query
+            const history = await rescueTeamService.getRescueTeamHistory(teamId, parseInt(limit as string) || 50)
+            return res.status(200).json({ success: true, data: history })
+        } catch (error: any) {
+            console.error('Error fetching rescue team history:', error)
+            return res.status(500).json({ success: false, message: error.message })
         }
     }
 }
