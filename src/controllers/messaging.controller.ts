@@ -1,6 +1,6 @@
 import { Role } from '../enums/Role'
 import { handleApiError } from '~/middleware/ErrorHandler'
-import { MessagingService } from '~/services/messagingService'
+import { MessagingService } from '~/services/messaging.service'
 import { createResponse } from '~/utils/response.utils'
 
 export class MessagingController {

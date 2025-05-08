@@ -187,4 +187,91 @@ router.get('/profile/full-info', rescueTeamController.getFullTeamInfo)
  */
 router.get('/members', rescueTeamController.getRescueTeamMembers)
 
+/**
+ * @swagger
+ * /rescue-teams/history/list-case:
+ *   get:
+ *     summary: Get all SOS requests grouped by case for a rescue team
+ *     description: Lấy danh sách các SOS requests được nhóm theo case dành cho một rescue team cụ thể.
+ *     tags:
+ *       - Rescue Team
+ *     security:
+ *       - bearerAuth: [] # Requires authentication
+ *     parameters:
+ *       - in: query
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *         type: integer
+ *         description: ID của rescue team.
+ *     responses:
+ *       200:
+ *         description: Danh sách các SOS requests được nhóm theo case.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       case:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID của case.
+ *                           status:
+ *                             type: string
+ *                             description: Trạng thái của case.
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: Thời gian tạo case.
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID của user.
+ *                           username:
+ *                             type: string
+ *                             description: Tên người dùng.
+ *                           email:
+ *                             type: string
+ *                             description: Email của người dùng.
+ *                       sosRequests:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               description: ID của SOS request.
+ *                             user_id:
+ *                               type: integer
+ *                               description: ID của user gửi SOS.
+ *                             latitude:
+ *                               type: string
+ *                               description: Vĩ độ của SOS request.
+ *                             longitude:
+ *                               type: string
+ *                               description: Kinh độ của SOS request.
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               description: Thời gian tạo SOS request.
+ *       400:
+ *         description: Lỗi khi không tìm thấy teamId hoặc dữ liệu không hợp lệ.
+ *       500:
+ *         description: Lỗi server.
+ */
+router.get('/history/list-case', rescueTeamController.getAllSosRequestsForTeam.bind(rescueTeamController))
+
+router.get('/history', rescueTeamController.getRescueTeamHistory)
 export default router
