@@ -240,6 +240,30 @@ class RescueTeamService {
 
         return formatPaginatedData(count, rows, safePage, safeLimit)
     }
+
+    async getRescueTeamMembers(userId: string): Promise<any[]> {
+        try {
+            const rescueTeam = await RescueTeam.findOne({
+                where: { user_id: userId },
+                attributes: ['team_members', 'team_name']
+            })
+
+            if (!rescueTeam) {
+                throw new Error(`Rescue team with account ID ${userId} not found.`)
+            }
+
+            const teamMembers = rescueTeam.getDataValue('team_members') || []
+            return teamMembers.map((member: any) => ({
+                id: member.id,
+                name: member.name,
+                role: member.role,
+                contact: member.contact
+            }))
+        } catch (error: any) {
+            console.error('Error fetching rescue team members:', error)
+            throw new Error(`Failed to fetch rescue team members: ${error.message}`)
+        }
+    }
 }
 
 export default new RescueTeamService()

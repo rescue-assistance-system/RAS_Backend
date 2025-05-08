@@ -220,4 +220,5 @@ router.post('/notifyTeamCase', authorize('coordinator'), controller.notifyRescue
  *         description: Internal server error
  */
 router.get('/rescue-teams/locations', authorize('coordinator'), controller.getRescueTeamLocations.bind(controller))
+
 export default router

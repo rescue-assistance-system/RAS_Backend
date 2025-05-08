@@ -584,5 +584,4 @@ router.get('/requests/team', sosController.getAllSosRequestsForTeam.bind(sosCont
  */
 router.get('/user/cases', sosController.getUserCases.bind(sosController))
 
-
 export default router

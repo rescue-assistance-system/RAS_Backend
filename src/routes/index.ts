@@ -3,7 +3,7 @@ import authRoutes from './auth.routes.swagger'
 // import notificationRoutes from './notification.routes'
 import adminRoutes from './admin.routes.swagger'
 // import coordinatorRoutes from './coordinator.routes.swagger';
-import rescueTeamRoutes from './rescue_team.routes'
+import rescueTeamRoutes from './rescue_team.routes.swagger'
 import trackingRoutes from './tracking.routes.swagger'
 import newsCategoryRoutes from './news_category.routes'
 import firstAidCategoryRoutes from './first_aid_category.routes'

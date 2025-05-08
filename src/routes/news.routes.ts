@@ -1,17 +1,15 @@
 import { Router } from 'express'
 import { NewsController } from '../controllers/news.controller'
 
-import { authorize } from '~/middleware/auth.middleware'
-
 const router = Router()
 
 const newsController = new NewsController()
 
 // Registration routes
-router.get('/', authorize(['admin']), newsController.getAllNews)
-router.get('/:id', authorize(['admin']), newsController.getNewsById)
-router.post('/', authorize(['admin']), newsController.createNews)
-router.put('/:id', authorize(['admin']), newsController.updateNews)
-router.delete('/:id', authorize(['admin']), newsController.deleteNews)
+router.get('/', newsController.getAllNews)
+router.get('/:id', newsController.getNewsById)
+router.post('/', newsController.createNews)
+router.put('/:id', newsController.updateNews)
+router.delete('/:id', newsController.deleteNews)
 
 export default router
