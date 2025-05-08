@@ -3,7 +3,12 @@ import rescueTeamController from '../controllers/rescue_team.controller'
 import { authorize } from '../middleware/auth.middleware'
 
 const router = Router()
+import { authenticateToken, authorize } from '~/middleware/auth.middleware'
 
+// const router = Router()
+// const controller = new SosCoordinatorController()
+
+router.use(authenticateToken)
 /**
  * @swagger
  * /rescue-teams/profile:

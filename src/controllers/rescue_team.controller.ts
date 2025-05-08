@@ -147,6 +147,7 @@ class RescueTeamController {
     public getRescueTeamMembers = async (req: Request, res: Response): Promise<void> => {
         try {
             const userId = req.user?.user_id?.toString()
+            console.log('User ID:', userId)
             if (!userId) {
                 res.status(400).json({ success: false, message: 'User ID is required' })
                 return
