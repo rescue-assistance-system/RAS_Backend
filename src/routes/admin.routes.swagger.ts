@@ -1,9 +1,10 @@
 import express from 'express'
-import { authorize } from '../middleware/auth.middleware'
+import { authenticateToken, authorize } from '../middleware/auth.middleware'
 import adminController from '../controllers/admin.controller'
 
 const router = express.Router()
 
+router.use(authenticateToken)
 router.post('/coordinators', authorize(['admin']), adminController.createCoordinator)
 router.get('/coordinators', authorize(['admin']), adminController.getCoordinators)
 router.get('/coordinators/:id', authorize(['admin']), adminController.getCoordinatorById)
