@@ -88,7 +88,7 @@ async function processCase(caseItem: any): Promise<void> {
 async function notifyCoordinator(caseId: number): Promise<void> {
     try {
         const sosService = new SosService()
-        const coordinators = await getCoordinators() 
+        const coordinators = await getCoordinators()
 
         if (coordinators.length === 0) {
             console.log(`No coordinators found for case ID ${caseId}.`)
@@ -120,7 +120,7 @@ async function getCoordinators(): Promise<number[]> {
 
     const coordinatorIds = coordinators
         .map((coordinator) => coordinator.id)
-        .filter((id): id is number => id !== null && id !== undefined) 
+        .filter((id): id is number => id !== null && id !== undefined)
 
     console.log(`Found ${coordinatorIds.length} coordinators.`)
     console.log(`Coordinator IDs: ${coordinatorIds.join(', ')}`)

@@ -516,7 +516,7 @@ export class SosService {
             console.log('Fetching details for case ID:', caseId)
 
             const sosRequests = await this.fetchSosRequests({
-                case_id: caseId 
+                case_id: caseId
             })
 
             if (sosRequests.length === 0) {

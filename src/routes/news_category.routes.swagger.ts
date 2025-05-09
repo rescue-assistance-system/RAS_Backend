@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import { NewsCategoryController } from '../controllers/news_category.controller';
+import { Router } from 'express'
+import { NewsCategoryController } from '../controllers/news_category.controller'
 
-const router = Router();
-const newsCategoryController = new NewsCategoryController();
+const router = Router()
+const newsCategoryController = new NewsCategoryController()
 
 /**
  * @swagger
@@ -30,7 +30,7 @@ const newsCategoryController = new NewsCategoryController();
  *       400:
  *         description: Bad request
  */
-router.get('/', newsCategoryController.getAllNewsCategories);
+router.get('/', newsCategoryController.getAllNewsCategories)
 
 /**
  * @swagger
@@ -63,7 +63,7 @@ router.get('/', newsCategoryController.getAllNewsCategories);
  *       400:
  *         description: Bad request
  */
-router.get('/:id', newsCategoryController.getNewsCategoryById);
+router.get('/:id', newsCategoryController.getNewsCategoryById)
 
 /**
  * @swagger
@@ -99,7 +99,7 @@ router.get('/:id', newsCategoryController.getNewsCategoryById);
  *       400:
  *         description: Bad request
  */
-router.post('/', newsCategoryController.createNewsCategory);
+router.post('/', newsCategoryController.createNewsCategory)
 
 /**
  * @swagger
@@ -131,7 +131,7 @@ router.post('/', newsCategoryController.createNewsCategory);
  *       400:
  *         description: Bad request
  */
-router.put('/:id', newsCategoryController.updateNewsCategory);
+router.put('/:id', newsCategoryController.updateNewsCategory)
 
 /**
  * @swagger
@@ -153,6 +153,6 @@ router.put('/:id', newsCategoryController.updateNewsCategory);
  *       400:
  *         description: Bad request
  */
-router.delete('/:id', newsCategoryController.deleteNewsCategory);
+router.delete('/:id', newsCategoryController.deleteNewsCategory)
 
-export default router;
+export default router
