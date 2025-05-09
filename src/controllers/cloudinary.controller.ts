@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import CloudinaryService from '../services/cloudinary.service'
 import fs from 'fs'
-import path from 'path'
+import { createResponse } from '~/utils/response.utils'
 
 class CloudinaryController {
     /**
@@ -14,31 +14,34 @@ class CloudinaryController {
         try {
             //Check if the file is present in the request
             if (!req.file) {
-                return res.status(400).json({ success: false, message: 'No file uploaded' })
+                return res.status(400).json(createResponse('error', null, 'No file uploaded'))
             }
 
             // Check if the file is an image, audio, or raw file
             const fileType = this.getFileType(req.file.mimetype)
 
             if (!fileType) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid file type. Only images, audio, and raw files are allowed.'
-                })
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            'error',
+                            null,
+                            'Invalid file type. Only images, audio, and raw files are allowed.'
+                        )
+                    )
             }
 
             const result = await CloudinaryService.uploadFile(req.file.path, 'uploads', fileType)
 
             this.deleteTemporaryFile(req.file.path)
 
-            return res.status(200).json({
-                success: true,
-                message: `${fileType} uploaded successfully`,
-                data: {
+            return res.status(200).json(
+                createResponse('success', {
                     url: result.secure_url,
                     public_id: result.public_id
-                }
-            })
+                })
+            )
         } catch (error: any) {
             console.error('Error uploading file:', error)
 
@@ -46,7 +49,7 @@ class CloudinaryController {
                 this.deleteTemporaryFile(req.file.path)
             }
 
-            return res.status(500).json({ success: false, message: 'Failed to upload file' })
+            return res.status(500).json(createResponse('error', null, 'Failed to upload file'))
         }
     }
 
