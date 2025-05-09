@@ -1,7 +1,6 @@
 import User from '../database/models/user.model'
 import bcrypt from 'bcrypt'
 import { Op } from 'sequelize'
-import CasesReport from '~/database/models/case_report.model'
 import RescueTeam from '~/database/models/rescue_team.model'
 import { formatPaginatedData, getPagination } from '~/utils/pagination'
 class RescueTeamService {
@@ -263,73 +262,6 @@ class RescueTeamService {
         } catch (error: any) {
             console.error('Error fetching rescue team members:', error)
             throw new Error(`Failed to fetch rescue team members: ${error.message}`)
-        }
-    }
-
-    public async getAllSosRequestsForTeam(req: Request, res: Response) {
-        try {
-            const teamId = req.user?.user_id
-            if (!teamId) {
-                return res.status(400).json(createResponse('error', null, 'Team ID is required in Access Token'))
-            }
-
-            const sosRequests = await this.sosService.getAllSosRequestsForTeam(teamId)
-            res.status(200).json(createResponse('success', sosRequests, 'SOS requests retrieved successfully'))
-        } catch (error: any) {
-            console.error('Error retrieving SOS requests:', error)
-            res.status(500).json(createResponse('error', null, 'Failed to retrieve SOS requests'))
-        }
-    }
-
-    async getRescueTeamHistory(teamId: number, limit: number = 50) {
-        try {
-            return await CasesReport.findAll({
-                where: { accepted_team_id: teamId },
-                order: [['created_at', 'DESC']],
-                limit,
-                attributes: [
-                    'id',
-                    'status',
-                    'created_at',
-                    'accepted_at',
-                    'ready_at',
-                    'completed_at',
-                    'cancelled_at',
-                    'cancelled_reason',
-                    'completed_description'
-                ]
-            })
-        } catch (error: any) {
-            console.error('Error fetching rescue team history:', error)
-            throw new Error(`Failed to fetch rescue team history: ${error.message}`)
-        }
-    }
-
-    async getHistoryCaseDetails(teamId: number, caseId: number) {
-        try {
-            const caseDetails = await CasesReport.findOne({
-                where: { id: caseId, accepted_team_id: teamId },
-                attributes: [
-                    'id',
-                    'status',
-                    'created_at',
-                    'accepted_at',
-                    'ready_at',
-                    'completed_at',
-                    'cancelled_at',
-                    'cancelled_reason',
-                    'completed_description'
-                ]
-            })
-
-            if (!caseDetails) {
-                throw new Error('Case not found or not assigned to this rescue team')
-            }
-
-            return caseDetails
-        } catch (error: any) {
-            console.error('Error fetching history case details:', error)
-            throw new Error(`Failed to fetch history case details: ${error.message}`)
         }
     }
 }

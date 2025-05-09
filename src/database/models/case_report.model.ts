@@ -89,6 +89,4 @@ CasesReport.init(
 CasesReport.belongsTo(User, { foreignKey: 'from_id', as: 'from' })
 CasesReport.belongsTo(User, { foreignKey: 'accepted_team_id', as: 'acceptedTeam' })
 
-
-
 export default CasesReport
