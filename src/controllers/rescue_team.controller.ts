@@ -173,7 +173,9 @@ class RescueTeamController {
                 return res.status(400).json(createResponse('error', null, 'Team ID is required in Access Token'))
             }
 
+            // const sosRequests = await this.sosService.getAllSosRequestsForTeam(teamId)
             const sosRequests = await this.sosService.getAllSosRequestsForTeam(teamId)
+
             res.status(200).json(createResponse('success', sosRequests, 'SOS requests retrieved successfully'))
         } catch (error: any) {
             console.error('Error retrieving SOS requests:', error)
@@ -189,26 +191,10 @@ class RescueTeamController {
             }
 
             const { caseId } = req.params
-            const history = await rescueTeamService.getHistoryCaseDetails(teamId, parseInt(caseId))
+            const history = await this.sosService.getCaseDetailsById(caseId)
             return res.status(200).json({ success: true, data: history })
         } catch (error: any) {
             console.error('Error fetching history case details:', error)
-            return res.status(500).json({ success: false, message: error.message })
-        }
-    }
-
-    async getRescueTeamHistory(req: Request, res: Response) {
-        try {
-            const teamId = req.user?.user_id
-            if (!teamId) {
-                return res.status(401).json({ success: false, message: 'Unauthorized' })
-            }
-
-            const { limit } = req.query
-            const history = await rescueTeamService.getRescueTeamHistory(teamId, parseInt(limit as string) || 50)
-            return res.status(200).json({ success: true, data: history })
-        } catch (error: any) {
-            console.error('Error fetching rescue team history:', error)
             return res.status(500).json({ success: false, message: error.message })
         }
     }

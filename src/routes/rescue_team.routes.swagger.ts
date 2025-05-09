@@ -11,7 +11,7 @@ import { authenticateToken, authorize } from '~/middleware/auth.middleware'
 router.use(authenticateToken)
 /**
  * @swagger
- * /rescue-teams/profile:
+ * /rescue-team/profile:
  *   post:
  *     summary: Create a rescue team profile
  *     tags:
@@ -55,7 +55,7 @@ router.post('/profile', rescueTeamController.createProfile)
 
 /**
  * @swagger
- * /rescue-teams/profile:
+ * /rescue-team/profile:
  *   get:
  *     summary: Get the rescue team profile
  *     tags:
@@ -72,7 +72,7 @@ router.get('/profile', rescueTeamController.getProfile)
 
 /**
  * @swagger
- * /rescue-teams/profile:
+ * /rescue-team/profile:
  *   put:
  *     summary: Update the rescue team profile
  *     tags:
@@ -115,7 +115,7 @@ router.put('/profile', rescueTeamController.updateProfile)
 
 /**
  * @swagger
- * /rescue-teams/profile/team-info:
+ * /rescue-team/profile/team-info:
  *   put:
  *     summary: Update the rescue team information
  *     tags:
@@ -153,7 +153,7 @@ router.get('/profile/full-info', rescueTeamController.getFullTeamInfo)
 
 /**
  * @swagger
- * /rescue-teams/members:
+ * /rescue-team/members:
  *   get:
  *     summary: Get members of the rescue team associated with the logged-in user
  *     tags:
@@ -189,7 +189,7 @@ router.get('/members', rescueTeamController.getRescueTeamMembers)
 
 /**
  * @swagger
- * /rescue-teams/history/list-case:
+ * /rescue-team/history/list-case:
  *   get:
  *     summary: Get all SOS requests grouped by case for a rescue team
  *     description: Lấy danh sách các SOS requests được nhóm theo case dành cho một rescue team cụ thể.
@@ -273,5 +273,96 @@ router.get('/members', rescueTeamController.getRescueTeamMembers)
  */
 router.get('/history/list-case', rescueTeamController.getAllSosRequestsForTeam.bind(rescueTeamController))
 
-router.get('/history', rescueTeamController.getRescueTeamHistory)
+/**
+ * @swagger
+ * /rescue-team/history/case/{caseId}:
+ *   get:
+ *     summary: Get detail of a specific case
+ *     tags:
+ *       - Rescue Team
+ *     parameters:
+ *       - name: caseId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the case
+ *     responses:
+ *       200:
+ *         description: Case detail retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     case:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           description: ID of the case
+ *                         status:
+ *                           type: string
+ *                           description: Status of the case
+ *                         created_at:
+ *                           type: string
+ *                           format: date-time
+ *                           description: Time when the case was created
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           description: ID of the user
+ *                         username:
+ *                           type: string
+ *                           description: Username of the user
+ *                         email:
+ *                           type: string
+ *                           description: Email of the user
+ *                     sosRequests:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: ID of the SOS request
+ *                           user_id:
+ *                             type: integer
+ *                             description: ID of the user who sent the SOS
+ *                           latitude:
+ *                             type: string
+ *                             description: Latitude of the SOS request
+ *                           longitude:
+ *                             type: string
+ *                             description: Longitude of the SOS request
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: Time when the SOS request was created
+ *                           updated_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: Time when the SOS request was last updated
+ *                           nearest_team_ids:
+ *                             type: array
+ *                             items:
+ *                               type: integer
+ *                             description: List of nearest team IDs
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Case not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/history/case/:caseId', rescueTeamController.getHistoryCaseDetails.bind(rescueTeamController))
+
 export default router

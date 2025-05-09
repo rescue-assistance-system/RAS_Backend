@@ -18,7 +18,7 @@ FirstAidGuide.init(
             type: DataTypes.TEXT,
             allowNull: false
         },
-        media_url: {
+        image_url: {
             type: DataTypes.STRING(255),
             allowNull: true
         },

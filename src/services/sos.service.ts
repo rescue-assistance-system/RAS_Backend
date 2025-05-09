@@ -497,6 +497,7 @@ export class SosService {
     }
 
     public async getAllSosRequestsForTeam(teamId: number): Promise<SosResponseDto[]> {
+        console.log('Fetching SOS requests for team:', teamId)
         try {
             const sosRequests = await this.fetchSosRequests({
                 nearest_team_ids: { [Op.contains]: [teamId] },
@@ -509,6 +510,28 @@ export class SosService {
             throw new Error(`Failed to fetch SOS requests for team: ${error.message}`)
         }
     }
+
+    public async getCaseDetailsById(caseId: string): Promise<SosResponseDto | null> {
+        try {
+            console.log('Fetching details for case ID:', caseId)
+
+            const sosRequests = await this.fetchSosRequests({
+                case_id: caseId 
+            })
+
+            if (sosRequests.length === 0) {
+                console.warn(`No SOS requests found for case ID: ${caseId}`)
+                return null
+            }
+            const caseDetails = this.mapSosRequestsToCases(sosRequests)
+
+            return caseDetails[0]
+        } catch (error: any) {
+            console.error('Error fetching case details:', error)
+            throw new Error(`Failed to fetch case details: ${error.message}`)
+        }
+    }
+
     public async getUserCases(userId: number): Promise<SosResponseDto[]> {
         try {
             const sosRequests = await this.fetchSosRequests({
