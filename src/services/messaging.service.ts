@@ -15,7 +15,8 @@ export class MessagingService {
         content: string,
         content_type: string,
         caseId: number,
-        fromRole: string
+        fromRole: string,
+        duration: number
     ): Promise<MessageDTO> {
         const senderName = await this.getSenderName(fromId)
         const message = await Message.create({
@@ -24,7 +25,8 @@ export class MessagingService {
             content_type,
             case_id: caseId,
             sender_name: senderName,
-            created_at: new Date()
+            created_at: new Date(),
+            duration: duration ?? null
         })
 
         const messageDTO = convertToMessageDTO(message.dataValues)

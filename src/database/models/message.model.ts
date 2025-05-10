@@ -10,6 +10,7 @@ class Message extends Model {
     public sender_name?: string
     public case_id!: number
     public avatar?: string
+    public duration?: number
 }
 
 Message.init(
@@ -43,7 +44,12 @@ Message.init(
         case_id: {
             type: DataTypes.INTEGER,
             allowNull: false
-        }
+        },
+        duration: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: null
+        },
     },
     {
         sequelize,
