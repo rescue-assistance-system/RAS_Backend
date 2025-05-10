@@ -6,7 +6,7 @@ class Message extends Model {
     public from_id!: number
     public created_at!: Date
     public content!: string
-    public contentType!: string
+    public content_type!: string
     public sender_name?: string
     public case_id!: number
     public avatar?: string
@@ -32,7 +32,7 @@ Message.init(
             type: DataTypes.TEXT,
             allowNull: false
         },
-        contentType: {
+        content_type: {
             type: DataTypes.ENUM('TEXT', 'IMAGE', 'VOICE', 'CALL'),
             allowNull: false
         },

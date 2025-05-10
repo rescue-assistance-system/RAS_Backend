@@ -29,13 +29,13 @@ router.use(authenticateToken)
  *             type: object
  *             required:
  *               - content
- *               - contentType
+ *               - content_type
  *               - caseId
  *             properties:
  *               content:
  *                 type: string
  *                 example: "This is the message content"
- *               contentType:
+ *               content_type:
  *                 type: string
  *                 enum: [TEXT, IMAGE, VOICE, CALL]
  *                 example: TEXT
@@ -279,7 +279,7 @@ router.get('/rescue-conversations', messagingController.getListConversationsByRe
  *         content:
  *           type: string
  *           example: "Hello, this is a message."
- *         contentType:
+ *         content_type:
  *           type: string
  *           example: "TEXT"
  *         senderId:
