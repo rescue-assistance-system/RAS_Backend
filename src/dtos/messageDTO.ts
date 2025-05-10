@@ -9,6 +9,7 @@ export class MessageDTO {
     createdAt: Date = new Date()
     senderName?: string = undefined
     avatar?: string = undefined
+    duration?: number = undefined
 }
 
 export function convertToDTO(message: Message): MessageDTO {
@@ -20,6 +21,7 @@ export function convertToDTO(message: Message): MessageDTO {
         content_type: message.content_type,
         senderName: message.sender_name,
         createdAt: message.created_at,
-        avatar: message.avatar
+        avatar: message.avatar,
+        duration: message.duration
     }
 }

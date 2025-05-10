@@ -31,6 +31,7 @@ router.use(authenticateToken)
  *               - content
  *               - content_type
  *               - caseId
+ *               - duration
  *             properties:
  *               content:
  *                 type: string
@@ -42,6 +43,9 @@ router.use(authenticateToken)
  *               caseId:
  *                 type: string
  *                 example: "case123"
+ *              duration:
+ *                type: integer
+ *                example: 60
  *     responses:
  *       200:
  *         description: Message sent successfully
