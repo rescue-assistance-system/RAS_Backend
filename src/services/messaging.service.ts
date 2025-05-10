@@ -13,7 +13,7 @@ export class MessagingService {
     async sendMessage(
         fromId: number,
         content: string,
-        contentType: string,
+        content_type: string,
         caseId: number,
         fromRole: string
     ): Promise<MessageDTO> {
@@ -21,7 +21,7 @@ export class MessagingService {
         const message = await Message.create({
             from_id: fromId,
             content,
-            contentType,
+            content_type,
             case_id: caseId,
             sender_name: senderName,
             created_at: new Date()
