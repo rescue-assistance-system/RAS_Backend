@@ -264,6 +264,19 @@ class RescueTeamService {
             throw new Error(`Failed to fetch rescue team members: ${error.message}`)
         }
     }
+
+    public async getAllRescueTeams(): Promise<any[]> {
+        try {
+            const rescueTeams = await RescueTeam.findAll({
+                attributes: ['id', 'team_name', 'description', 'status']
+            })
+
+            return rescueTeams
+        } catch (error: any) {
+            console.error('Error fetching rescue teams:', error)
+            throw new Error('Failed to fetch rescue teams')
+        }
+    }
 }
 
 export default new RescueTeamService()

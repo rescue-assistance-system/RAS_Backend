@@ -27,12 +27,24 @@ const fileFilter = (req: any, file: any, cb: any) => {
         'audio/m4a',
         'audio/wav',
         'audio/mp4',
-        'video/mp4'
+        'video/mp4',
+        'video/3gpp',
+        'audio/3gpp',
+        'image/gif',
+        'image/heic',
+        'video/webm',
+        'audio/aac',
+        'audio/amr',
+        'audio/ogg'
     ]
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true)
     } else {
-        cb(new Error('Invalid file type. Only JPEG, PNG, JPG, and MP3 are allowed.'))
+        cb(
+            new Error(
+                'Invalid file type. Only JPEG, PNG, JPG, GIF, HEIC, MP3, M4A, WAV, MP4, 3GP, AAC, AMR, OGG, WEBM are allowed.'
+            )
+        )
     }
 }
 
