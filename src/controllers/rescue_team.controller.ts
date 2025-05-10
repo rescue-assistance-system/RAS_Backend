@@ -198,6 +198,17 @@ class RescueTeamController {
             return res.status(500).json({ success: false, message: error.message })
         }
     }
+
+    public async getAllRescueTeams(req: Request, res: Response): Promise<Response> {
+        try {
+            const rescueTeams = await rescueTeamService.getAllRescueTeams()
+
+            return res.status(200).json(createResponse('success', rescueTeams, 'Rescue teams retrieved successfully'))
+        } catch (error: any) {
+            console.error('Error fetching rescue teams:', error)
+            return res.status(500).json(createResponse('error', null, 'Failed to retrieve rescue teams'))
+        }
+    }
 }
 
 export default new RescueTeamController()

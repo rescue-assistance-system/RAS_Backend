@@ -365,4 +365,5 @@ router.get('/history/list-case', rescueTeamController.getAllSosRequestsForTeam.b
  */
 router.get('/history/case/:caseId', rescueTeamController.getHistoryCaseDetails.bind(rescueTeamController))
 
+router.get('/allRescueTeams', rescueTeamController.getAllRescueTeams.bind(rescueTeamController))
 export default router
