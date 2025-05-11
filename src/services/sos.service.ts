@@ -9,6 +9,7 @@ import { CaseStatus } from '../enums/case-status.enum'
 import { NotificationType } from '~/enums/notification-types.enum'
 import { TrackingService } from './tracking.service'
 import { Op } from 'sequelize'
+import { SosMessageDto } from '~/dtos/sos-message.dto'
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -52,7 +53,7 @@ export class SosService {
 
     public async sendNotificationToUser(
         userIds: number[],
-        notification: { type: string; message: string }
+        notification: { type: NotificationType; sosMesage: SosMessageDto }
     ): Promise<void> {
         const userIdStrings = userIds.map((id) => id.toString())
 
@@ -128,7 +129,12 @@ export class SosService {
             const teamIds = availableTeams.map((team) => team.user_id)
             const notification = {
                 type: NotificationType.SOS_REQUEST,
-                message: `SOS request received for location (${latitude}, ${longitude}).`
+                sosMesage: new SosMessageDto({
+                    message: `SOS request received for location (${latitude}, ${longitude}).`,
+                    latitude,
+                    longitude,
+                    address
+                })
             }
 
             await this.sendNotificationToUser(teamIds, notification)
@@ -142,8 +148,13 @@ export class SosService {
                 const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
                 const trackingNotification = {
                     type: NotificationType.SOS_REQUEST,
-                    message: ` SOS request received for location (${latitude}, ${longitude}).`,
-                    address
+                    sosMesage: new SosMessageDto({
+                        message: `SOS request received for location (${latitude}, ${longitude}).`,
+                        userId: Number(userId),
+                        latitude,
+                        longitude,
+                        address
+                    })
                 }
                 await this.sendNotificationToUser(trackerIds, trackingNotification)
             }
@@ -232,7 +243,10 @@ export class SosService {
             const allNearestTeamIds = await this.getNearestTeamIds(caseToUpdate.sos_list || [])
             const notification = {
                 type: NotificationType.CASE_SAFE,
-                message: `Case ${caseId} has been marked as cancelled. The user is safe.`
+                sosMesage: new SosMessageDto({
+                    message: `Case ${caseId} has been marked as cancelled. The user is safe.`,
+                    caseId: caseId
+                })
             }
 
             await this.sendNotificationToUser(Array.from(allNearestTeamIds), notification)
@@ -262,18 +276,24 @@ export class SosService {
             const allNearestTeamIds = await this.getNearestTeamIds(sosList)
             const remainingTeamIds = Array.from(allNearestTeamIds).filter((id) => id !== teamId)
 
-            const userNotification = {
+            // Get accountn rc username
+            const user = await User.findOne({
+                where: { id: teamId },
+                attributes: ['username']
+            })
+
+            const notification = {
                 type: NotificationType.CASE_ACCEPTED,
-                message: `Your case ${caseId} has been accepted by a rescue team (${teamId}).`
+                sosMesage: new SosMessageDto({
+                    message: `Case ${caseId} has been accepted by rescue team (${teamId}).`,
+                    caseId: caseId,
+                    teamId: teamId,
+                    userName: user?.username
+                })
             }
 
-            const teamNotification = {
-                type: NotificationType.CASE_ACCEPTED,
-                message: `Case ${caseId} has been accepted by team ${teamId}.`
-            }
-
-            await this.sendNotificationToUser([userId], userNotification)
-            await this.sendNotificationToUser(remainingTeamIds, teamNotification)
+            await this.sendNotificationToUser([userId, ...remainingTeamIds], notification)
+            // await this.sendNotificationToUser(remainingTeamIds, notification)
         } catch (error: any) {
             console.error('Error accepting case:', error)
             throw new Error(`Failed to accept case: ${error.message}`)
@@ -302,18 +322,22 @@ export class SosService {
             // Notify the user
             const userId = caseToUpdate.from_id
 
-            const teamNotification = {
+            const notification = {
                 type: NotificationType.CASE_REJECTED,
-                message: `Case ${caseId} has been rejected by team ${teamId}.`
+                sosMesage: new SosMessageDto({
+                    message: `Case ${caseId} has been rejected by team ${teamId}.`,
+                    caseId: caseId,
+                    teamId: teamId
+                })
             }
 
-            const userNotification = {
-                type: NotificationType.CASE_REJECTED,
-                message: `Case ${caseId} has been rejected by team ${teamId}.`
-            }
+            // const userNotification = {
+            //     type: NotificationType.CASE_REJECTED,
+            //     message: `Case ${caseId} has been rejected by team ${teamId}.`
+            // }
 
-            await this.sendNotificationToUser(remainingTeamIds, teamNotification)
-            await this.sendNotificationToUser([userId], userNotification)
+            await this.sendNotificationToUser([userId, ...remainingTeamIds], notification)
+            // await this.sendNotificationToUser([userId], userNotification)
         } catch (error: any) {
             console.error('Error rejecting case:', error)
             throw new Error(`Failed to reject case: ${error.message}`)
@@ -384,7 +408,12 @@ export class SosService {
             const userId = caseToUpdate.dataValues.from_id
             const notification = {
                 type: NotificationType.CASE_STATUS_UPDATED,
-                message: `The status of your case ${caseId} has been updated to ${newStatus} by the rescue team.`
+                sosMesage: new SosMessageDto({
+                    message: `The status of your case ${caseId} has been updated to ${newStatus} by the rescue team.`,
+                    caseId: caseId,
+                    teamId: teamId,
+                    status: newStatus
+                })
             }
 
             await this.sendNotificationToUser([userId], notification)
@@ -407,9 +436,21 @@ export class SosService {
             console.log(`Case ${caseId} has been marked as cancelled by team ${teamId}.`)
             await RescueTeam.update({ status: 'available' }, { where: { user_id: teamId } })
             const userId = caseToUpdate.from_id
+
+            // Get accountn rc username
+            const user = await User.findOne({
+                where: { id: teamId },
+                attributes: ['username']
+            })
+
             const notification = {
                 type: NotificationType.CASE_CANCELLED,
-                message: `Your case ${caseId} has been marked as cancelled by the rescue team ${teamId}. Reason: ${reason}`
+                sosMesage: new SosMessageDto({
+                    message: `Your case ${caseId} has been marked as cancelled. Reason: ${reason}`,
+                    caseId: caseId,
+                    teamId: teamId,
+                    userName: user?.username
+                })
             }
 
             await this.sendNotificationToUser([userId], notification)
@@ -436,7 +477,11 @@ export class SosService {
             const userId = caseToUpdate.from_id
             const notification = {
                 type: NotificationType.CASE_COMPLETED,
-                message: `Your case ${caseId} has been marked as completed by the rescue team (${teamId}). Description: ${description}`
+                sosMesage: new SosMessageDto({
+                    message: `Your case ${caseId} has been marked as completed by the rescue team (${teamId}). Description: ${description}`,
+                    caseId: caseId,
+                    teamId: teamId
+                })
             }
 
             await this.sendNotificationToUser([userId], notification)
