@@ -7,6 +7,7 @@ import { SosResponseDto } from '~/dtos/sos-request.dto'
 import { SosService } from './sos.service'
 import { CaseStatus } from '~/enums/case-status.enum'
 import RescueTeam from '~/database/models/rescue_team.model'
+import { SosMessageDto } from '~/dtos/sos-message.dto'
 
 export class CoordinatorSosService {
     private sosService = new SosService()
@@ -125,14 +126,22 @@ export class CoordinatorSosService {
             await RescueTeam.update({ status: 'busy' }, { where: { user_id: teamId } })
             const notification = {
                 type: NotificationType.CASE_ASSIGNED,
-                message: `You have been assigned to case ${caseId} by the coordinator.`
+                message: `You have been assigned to case ${caseId} by the coordinator.`,
+                sosMesage: new SosMessageDto({
+                    message: `You have been assigned to case ${caseId} by the coordinator.`,
+                    caseId: caseId
+                })
             }
             await new SosService().sendNotificationToUser([teamId], notification)
 
             const userId = caseToUpdate.dataValues.from_id
             const userNotification = {
                 type: NotificationType.CASE_ASSIGNED,
-                message: `Your case ${caseId} has been assigned to a rescue team by the coordinator.`
+                sosMesage: new SosMessageDto({
+                    message: `Your case ${caseId} has been assigned to a rescue team by the coordinator.`,
+                    caseId: caseId,
+                    teamId: teamId
+                })
             }
             await new SosService().sendNotificationToUser([userId], userNotification)
         } catch (error: any) {
@@ -167,11 +176,14 @@ export class CoordinatorSosService {
 
             const notification = {
                 type: NotificationType.CASE_UPDATE,
-                message
+                sosMesage: new SosMessageDto({
+                    message: message,
+                    caseId: caseId
+                })
             }
 
             for (const teamId of Array.from(allNearestTeamIds)) {
-                await new SosService().sendNotificationToUser(teamId, notification)
+                await new SosService().sendNotificationToUser([teamId], notification)
             }
             console.log(`Notification sent to rescue teams for case ${caseId}.`)
         } catch (error: any) {
@@ -197,7 +209,10 @@ export class CoordinatorSosService {
 
             const notification = {
                 type: NotificationType.CASE_UPDATE,
-                message
+                sosMesage: new SosMessageDto({
+                    message: message,
+                    caseId: caseId
+                })
             }
 
             await new SosService().sendNotificationToUser([acceptedTeamId], notification)
