@@ -179,6 +179,7 @@ export class SosService {
                     CaseStatus.CANCELLED,
                     CaseStatus.ACCEPTED,
                     CaseStatus.READY,
+                    CaseStatus.SAFE,
                     CaseStatus.EXPIRED
                 ].includes(latestCase.dataValues.status)
                 console.log('Latest case status:', latestCase.dataValues.status)
