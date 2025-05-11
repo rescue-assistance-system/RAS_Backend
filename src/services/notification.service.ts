@@ -3,6 +3,7 @@ import { firebaseAdmin } from '~/configs/firebase.config'
 import User from '~/database/models/user.model'
 import { LocationRequestDto } from '~/dtos/location-request.dto'
 import { MessageDTO } from '~/dtos/messageDTO'
+import { SosMessageDto } from '~/dtos/sos-message.dto'
 import { SosResponseDto } from '~/dtos/sos-request.dto'
 
 export class NotificationService {
@@ -82,7 +83,10 @@ export class NotificationService {
         }
     }
 
-    public async sendToOfflineUsers(userIds: string[], notification: { type: string; message: string }): Promise<void> {
+    public async sendToOfflineUsers(
+        userIds: string[],
+        notification: { type: string; sosMesage: SosMessageDto }
+    ): Promise<void> {
         const fcmTokens = await this.getFCMTokens(userIds)
         if (fcmTokens.length === 0) {
             console.log('No FCM tokens found for offline users.')
