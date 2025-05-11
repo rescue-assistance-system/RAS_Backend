@@ -125,51 +125,9 @@ export class SosService {
             }
 
             const notifiedTeamIds: string[] = []
-            //send SOS signal to RCs
             const teamIds = availableTeams.map((team) => team.user_id)
-            const notification = {
-                type: NotificationType.SOS_REQUEST,
-                sosMesage: new SosMessageDto({
-                    message: `SOS request received for location (${latitude}, ${longitude}).`,
-                    latitude,
-                    longitude,
-                    address
-                })
-            }
 
-            await this.sendNotificationToUser(teamIds, notification)
-            notifiedTeamIds.push(...teamIds.map((id) => id.toString()))
-
-            //send SOS signal to trackers
-            const trackingService = new TrackingService()
-            const trackers = await trackingService.getTrackers(parseInt(userId))
-            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
-            if (activeTrackers.length > 0) {
-                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
-                const trackingNotification = {
-                    type: NotificationType.SOS_REQUEST,
-                    sosMesage: new SosMessageDto({
-                        message: `SOS request received for location (${latitude}, ${longitude}).`,
-                        userId: Number(userId),
-                        latitude,
-                        longitude,
-                        address
-                    })
-                }
-                await this.sendNotificationToUser(trackerIds, trackingNotification)
-            }
-
-            const nearestTeamIds = notifiedTeamIds
-                .map((id) => {
-                    const teamIdNum = parseInt(id)
-                    if (isNaN(teamIdNum)) {
-                        console.error(`Invalid teamId: ${id}. Skipping this team.`)
-                        return null
-                    }
-                    return teamIdNum
-                })
-                .filter((id) => id !== null)
-
+            // Create case before sending SOS
             const userIdNum = parseInt(userId)
             if (isNaN(userIdNum)) {
                 throw new Error('Invalid userId')
@@ -212,11 +170,13 @@ export class SosService {
                     sos_list: []
                 })
             }
+
+            // Create SOS request
             const sosRequest = await SosRequest.create({
                 user_id: userIdNum,
                 latitude,
                 longitude,
-                nearest_team_ids: nearestTeamIds,
+                nearest_team_ids: teamIds,
                 case_id: caseToUse.id
             })
 
@@ -224,6 +184,54 @@ export class SosService {
                 ? [...caseToUse.sos_list, sosRequest.id]
                 : [sosRequest.id]
             await caseToUse.update({ sos_list: updatedSosList })
+
+            //send SOS signal to RCs
+            // const teamIds = availableTeams.map((team) => team.user_id)
+            const notification = {
+                type: NotificationType.SOS_REQUEST,
+                sosMesage: new SosMessageDto({
+                    message: `SOS request received for location (${latitude}, ${longitude}).`,
+                    latitude,
+                    longitude,
+                    address,
+                    caseId: caseToUse.id,
+                    userId: userIdNum
+                })
+            }
+
+            await this.sendNotificationToUser(teamIds, notification)
+            notifiedTeamIds.push(...teamIds.map((id) => id.toString()))
+
+            //send SOS signal to trackers
+            const trackingService = new TrackingService()
+            const trackers = await trackingService.getTrackers(parseInt(userId))
+            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (activeTrackers.length > 0) {
+                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+                const trackingNotification = {
+                    type: NotificationType.SOS_REQUEST,
+                    sosMesage: new SosMessageDto({
+                        message: `SOS request received for location (${latitude}, ${longitude}).`,
+                        userId: Number(userId),
+                        latitude,
+                        longitude,
+                        address,
+                        caseId: caseToUse.id
+                    })
+                }
+                await this.sendNotificationToUser(trackerIds, trackingNotification)
+            }
+
+            // const nearestTeamIds = notifiedTeamIds
+            //     .map((id) => {
+            //         const teamIdNum = parseInt(id)
+            //         if (isNaN(teamIdNum)) {
+            //             console.error(`Invalid teamId: ${id}. Skipping this team.`)
+            //             return null
+            //         }
+            //         return teamIdNum
+            //     })
+            //     .filter((id) => id !== null)
 
             return { notifiedTeamIds, caseId: caseToUse.id }
         } catch (error: any) {

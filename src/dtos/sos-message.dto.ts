@@ -8,6 +8,8 @@ export class SosMessageDto {
     longitude?: number
     address?: string
     status?: string
+    caseId?: number
+    userId?: number
 
     constructor(init?: Partial<SosMessageDto>) {
         Object.assign(this, init)
