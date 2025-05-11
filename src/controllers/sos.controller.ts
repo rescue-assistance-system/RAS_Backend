@@ -23,14 +23,14 @@ export class SosController {
                     .json(createResponse('error', null, 'User ID, latitude, longitude or address are required'))
             }
 
-            const notifiedTeamIds = await this.sosService.sendSosRequest({
+            const { notifiedTeamIds, caseId } = await this.sosService.sendSosRequest({
                 userId,
                 latitude,
                 longitude,
                 address
             })
             res.status(200).json(
-                createResponse('success', { notifiedTeamIds, address }, 'SOS request sent successfully')
+                createResponse('success', { notifiedTeamIds, caseId, address }, 'SOS request sent successfully')
             )
         } catch (error: any) {
             return handleApiError(res, error, 'Error processing SOS request:')

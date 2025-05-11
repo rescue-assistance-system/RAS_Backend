@@ -124,7 +124,6 @@ export class SosService {
             }
 
             const notifiedTeamIds: string[] = []
-
             //send SOS signal to RCs
             const teamIds = availableTeams.map((team) => team.user_id)
             const notification = {
@@ -214,7 +213,7 @@ export class SosService {
                 : [sosRequest.id]
             await caseToUse.update({ sos_list: updatedSosList })
 
-            return notifiedTeamIds
+            return { notifiedTeamIds, caseId: caseToUse.id }
         } catch (error: any) {
             console.error('Error sending SOS request:', error)
             throw new Error(`Failed to send SOS request: ${error.message}`)
