@@ -93,13 +93,18 @@ export class NotificationService {
             return
         }
 
+        const notificationData = {
+            type: notification.type,
+            sosMesage: JSON.stringify(notification.sosMesage) // Properly stringify the object
+        }
+
         const stringifiedData = Object.fromEntries(
             Object.entries(notification).map(([key, value]) => [key, String(value)])
         )
         for (const token of fcmTokens) {
             const message = {
                 token,
-                data: stringifiedData
+                data: notificationData
             }
 
             try {
