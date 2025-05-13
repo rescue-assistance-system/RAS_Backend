@@ -59,7 +59,8 @@ export class SosCoordinatorController {
     // Assign a rescue team to a case
     public assignTeamToCase = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { teamId, caseId, coordinatorId } = req.body
+            const coordinatorId = req.user?.user_id
+            const { teamId, caseId } = req.body
             await this.coordinatorSosService.assignTeamToCase(Number(teamId), Number(caseId), Number(coordinatorId))
             res.status(200).json(createResponse(null, 'Team assigned to case successfully'))
         } catch (error) {

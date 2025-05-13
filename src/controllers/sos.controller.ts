@@ -195,4 +195,22 @@ export class SosController {
             res.status(500).json(createResponse('error', null, 'Failed to retrieve user cases'))
         }
     }
+
+    public async getCaseDetails(req: Request, res: Response) {
+        try {
+            const teamId = req.user?.user_id
+            console.log('Team ID:', teamId)
+            const { id } = req.params
+            console.log('Request params:', req.params)
+            if (!id) {
+                return res.status(400).json(createResponse('error', null, 'Case ID is required'))
+            }
+
+            const caseDetails = await this.sosService.getCaseDetailsById(id, teamId)
+            res.status(200).json(createResponse('success', caseDetails, 'Case details retrieved successfully'))
+        } catch (error: any) {
+            console.error('Error retrieving case details:', error)
+            res.status(500).json(createResponse('error', null, 'Failed to retrieve case details'))
+        }
+    }
 }

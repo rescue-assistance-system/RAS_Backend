@@ -537,12 +537,12 @@ export class SosService {
                 {
                     model: User,
                     as: 'user',
-                    attributes: ['id', 'username', 'email']
+                    attributes: ['id', 'username', 'email', 'phone', 'avatar', 'birthday']
                 },
                 {
                     model: CasesReport,
                     as: 'case',
-                    attributes: ['id', 'status', 'created_at']
+                    attributes: ['id', 'status', 'created_at', 'accepted_team_id', 'cancelled_reason']
                 }
             ],
             order: [['created_at', 'DESC']]
@@ -564,7 +564,7 @@ export class SosService {
         }
     }
 
-    public async getCaseDetailsById(caseId: string): Promise<SosResponseDto | null> {
+    public async getCaseDetailsById(caseId: string, teamId?: number): Promise<SosResponseDto | null> {
         try {
             console.log('Fetching details for case ID:', caseId)
 
@@ -576,9 +576,21 @@ export class SosService {
                 console.warn(`No SOS requests found for case ID: ${caseId}`)
                 return null
             }
-            const caseDetails = this.mapSosRequestsToCases(sosRequests)
+            const caseDetails = this.mapSosRequestsToCases(sosRequests)[0]
 
-            return caseDetails[0]
+            if (teamId) {
+                const team = await RescueTeam.findOne({ where: { user_id: teamId } })
+                console.log('Team found:', team)
+                if (team) {
+                    const teamLat = team.dataValues.default_latitude
+                    const teamLng = team.dataValues.default_longitude
+                    caseDetails.sosRequests = caseDetails.sosRequests.map((sos: any) => ({
+                        ...sos,
+                        distance_to_team: this.calculateDistance(sos.latitude, sos.longitude, teamLat, teamLng)
+                    }))
+                }
+            }
+            return caseDetails
         } catch (error: any) {
             console.error('Error fetching case details:', error)
             throw new Error(`Failed to fetch case details: ${error.message}`)

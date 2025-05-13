@@ -89,6 +89,9 @@ export class CoordinatorSosService {
     }
     public async assignTeamToCase(teamId: number, caseId: number, coordinatorId: number): Promise<void> {
         try {
+            if (!coordinatorId || isNaN(Number(coordinatorId))) {
+                throw new Error('Invalid coordinatorId')
+            }
             const caseToUpdate = await CasesReport.findOne({
                 where: { id: caseId }
             })
@@ -120,7 +123,7 @@ export class CoordinatorSosService {
                 status: CaseStatus.ACCEPTED,
                 accepted_team_id: teamId,
                 accepted_at: new Date(),
-                assigned_by: coordinatorId
+                assigned_by: Number(coordinatorId)
             })
             console.log(`Case ${caseId} has been assigned to team ${teamId} by coordinator ${coordinatorId}.`)
             await RescueTeam.update({ status: 'busy' }, { where: { user_id: teamId } })
