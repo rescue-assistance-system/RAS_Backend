@@ -500,4 +500,6 @@ router.get('/requests/team', sosController.getAllSosRequestsForTeam.bind(sosCont
  */
 router.get('/user/cases', sosController.getUserCases.bind(sosController))
 
+router.get('/caseDetail/:id', sosController.getCaseDetails.bind(sosController))
+
 export default router
