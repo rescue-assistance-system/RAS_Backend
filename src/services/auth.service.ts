@@ -97,19 +97,19 @@ export class AuthService {
                 throw new Error('Password does not match')
             }
 
-            if (user.dataValues.device_id && user.dataValues.device_id !== device_id) {
-                throw new Error(
-                    'This account is already linked to another device. Please send RequestOTP to verify the new device.'
-                )
-            }
+            // if (user.dataValues.device_id && user.dataValues.device_id !== device_id) {
+            //     throw new Error(
+            //         'This account is already linked to another device. Please send RequestOTP to verify the new device.'
+            //     )
+            // }
 
-            const existingDeviceUser = await User.findOne({
-                where: { device_id: device_id }
-            })
+            // const existingDeviceUser = await User.findOne({
+            //     where: { device_id: device_id }
+            // })
 
-            if (existingDeviceUser && existingDeviceUser.dataValues.email !== email) {
-                throw new Error('This device is already linked to another account.')
-            }
+            // if (existingDeviceUser && existingDeviceUser.dataValues.email !== email) {
+            //     throw new Error('This device is already linked to another account.')
+            // }
 
             await user.update({ device_id, fcm_token })
 

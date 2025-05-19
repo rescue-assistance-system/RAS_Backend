@@ -155,7 +155,7 @@ router.post('/assign-team', authorize('coordinator'), controller.assignTeamToCas
 
 /**
  * @swagger
- * /coordinator/notifyTeamCase:
+ * /coordinator/notify-rescue-team:
  *   post:
  *     summary: Notify rescue team of Case about a case update
  *     tags:
@@ -181,7 +181,7 @@ router.post('/assign-team', authorize('coordinator'), controller.assignTeamToCas
  *       500:
  *         description: Internal server error
  */
-router.post('/notifyTeamCase', authorize('coordinator'), controller.notifyRescueTeamOfCase.bind(controller))
+router.post('/notify-rescue-team', authorize('coordinator'), controller.notifyRescueTeamOfCase.bind(controller))
 
 /**
  * @swagger
