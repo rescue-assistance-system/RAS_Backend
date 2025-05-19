@@ -83,7 +83,7 @@ User.init(
         device_id: {
             type: DataTypes.STRING,
             allowNull: true,
-            unique: true
+            // unique: true
         },
         tracking_code: {
             type: DataTypes.STRING,
