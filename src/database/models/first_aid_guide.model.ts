@@ -20,7 +20,7 @@ FirstAidGuide.init(
             allowNull: false
         },
         image_url: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.ARRAY(DataTypes.STRING),
             allowNull: true
         },
         created_at: {
