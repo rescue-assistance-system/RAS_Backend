@@ -77,4 +77,5 @@ const router = Router()
  */
 router.post('/file', upload.single('file'), UploadController.uploadFile)
 
+router.post('/upload-multiple', upload.array('files', 10), UploadController.uploadMultipleFiles)
 export default router

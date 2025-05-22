@@ -53,6 +53,38 @@ class CloudinaryController {
         }
     }
 
+    public uploadMultipleFiles = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const files = req.files as Express.Multer.File[]
+            if (!files || files.length === 0) {
+                return res.status(400).json(createResponse('error', null, 'No files uploaded'))
+            }
+
+            const uploadResults = []
+            for (const file of files) {
+                const fileType = this.getFileType(file.mimetype)
+                if (!fileType) {
+                    this.deleteTemporaryFile(file.path)
+                    continue
+                }
+                const result = await CloudinaryService.uploadFile(file.path, 'uploads', fileType)
+                uploadResults.push({
+                    url: result.secure_url,
+                    public_id: result.public_id
+                })
+                this.deleteTemporaryFile(file.path)
+            }
+
+            return res.status(200).json(createResponse('success', uploadResults))
+        } catch (error: any) {
+            if (req.files) {
+                ;(req.files as Express.Multer.File[]).forEach((file) => {
+                    this.deleteTemporaryFile(file.path)
+                })
+            }
+            return res.status(500).json(createResponse('error', null, 'Failed to upload files'))
+        }
+    }
     /**
      * Get file type based on mimetype
      * @param mimetype - Mimetype of the file

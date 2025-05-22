@@ -268,10 +268,26 @@ class RescueTeamService {
     public async getAllRescueTeams(): Promise<any[]> {
         try {
             const rescueTeams = await RescueTeam.findAll({
-                attributes: ['id', 'team_name', 'description', 'status']
+                attributes: ['id', 'user_id', 'team_name', 'description', 'status'],
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['phone', 'email']
+                    }
+                ]
             })
 
-            return rescueTeams
+            console.log('Rescue Teams', rescueTeams)
+            return rescueTeams.map((team: any) => ({
+                id: team.id,
+                user_id: team.user_id,
+                team_name: team.team_name,
+                description: team.description,
+                status: team.status,
+                phone: team.user?.phone || null,
+                email: team.user?.email || null
+            }))
         } catch (error: any) {
             console.error('Error fetching rescue teams:', error)
             throw new Error('Failed to fetch rescue teams')

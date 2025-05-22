@@ -4,7 +4,7 @@ import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary'
 class CloudinaryService {
     /**
      * Upload file to Cloudinary
-     * @param filePath - Path to the file to be uploaded
+     * @param filePaths - Path to the file to be uploaded
      * @param folder - Folder name in Cloudinary
      * @param resourceType - Type of the resource (image, video, raw, etc.)
      */
@@ -18,11 +18,20 @@ class CloudinaryService {
                 folder,
                 resource_type: resourceType
             })
+            console.log(`Uploaded ${resourceType} to Cloudinary:`, result)
             return result
         } catch (error: UploadApiErrorResponse | any) {
             console.error(`Error uploading ${resourceType} to Cloudinary:`, error)
             throw new Error(`Failed to upload ${resourceType} to Cloudinary`)
         }
+    }
+    public async uploadMultipleFiles(
+        filePaths: string[],
+        folder: string = 'uploads',
+        resourceType: 'image' | 'video' | 'raw' = 'image'
+    ): Promise<UploadApiResponse[]> {
+        const uploadPromises = filePaths.map((filePath) => this.uploadFile(filePath, folder, resourceType))
+        return Promise.all(uploadPromises)
     }
 }
 
