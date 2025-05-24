@@ -5,6 +5,7 @@ import { LocationRequestDto } from '~/dtos/location-request.dto'
 import { LocationResponseDto } from '~/dtos/location-response.dto'
 import { SosResponseDto } from '~/dtos/sos-request.dto'
 import { MessageDTO } from '~/dtos/messageDTO'
+import { CallingMessageDTO } from '~/dtos/calling-mesage.dto'
 
 export class SocketService {
     private static instance: SocketService
@@ -41,6 +42,8 @@ export class SocketService {
         socket.on('disconnect', async () => {
             await this.handleDisconnect(socket)
         })
+
+        this.handleSignalingServer(socket)
     }
 
     private async handleRegister(socket: Socket, data: { userId: string }): Promise<void> {
@@ -66,6 +69,88 @@ export class SocketService {
             await SocketManager.removeSocket(userId)
         }
         console.log('Client disconnected:', socket.id)
+    }
+
+    public async handleSignalingServer(socket: Socket): Promise<void> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+
+        socket.on('calling', async (message: CallingMessageDTO) => {
+            console.log('Received calling message:', message)
+
+            switch (message.type) {
+                case 'start_call': {
+                    const userToCall = await SocketManager.getSocketId(message.toId)
+
+                    if (userToCall) {
+                        socket.send(
+                            JSON.stringify({
+                                type: 'call_response',
+                                data: 'user is ready for call'
+                            })
+                        )
+                    } else {
+                        socket.send(
+                            JSON.stringify({
+                                type: 'call_response',
+                                data: 'user is not online'
+                            })
+                        )
+                    }
+
+                    break
+                }
+
+                case 'create_offer': {
+                    const userToReceiveOffer = await SocketManager.getSocketId(message.toId)
+
+                    if (userToReceiveOffer && this.io) {
+                        this.io.to(userToReceiveOffer).emit(
+                            JSON.stringify({
+                                type: 'offer_received',
+                                name: message.name,
+                                fromId: message.fromId,
+                                data: message.data.sdp
+                            })
+                        )
+                    }
+                    break
+                }
+
+                case 'create_answer': {
+                    const userToReceiveAnswer = await SocketManager.getSocketId(message.toId)
+                    if (userToReceiveAnswer && this.io) {
+                        this.io.to(userToReceiveAnswer).emit(
+                            JSON.stringify({
+                                type: 'answer_received',
+                                name: message.name,
+                                fromId: message.fromId,
+                                data: message.data.sdp
+                            })
+                        )
+                    }
+                    break
+                }
+
+                case 'ice_candidate': {
+                    const userToReceiveIceCandidate = await SocketManager.getSocketId(data.toId)
+                    if (userToReceiveIceCandidate && this.io) {
+                        this.io.to(userToReceiveIceCandidate).emit(
+                            JSON.stringify({
+                                type: 'ice_candidate',
+                                name: message.name,
+                                fromId: message.fromId,
+                                data: {
+                                    sdpMLineIndex: message.data.sdpMLineIndex,
+                                    sdpMid: message.data.sdpMid,
+                                    sdpCandidate: message.data.sdpCandidate
+                                }
+                            })
+                        )
+                    }
+                    break
+                }
+            }
+        })
     }
 
     public async handleAskLocation(data: LocationRequestDto): Promise<void> {
