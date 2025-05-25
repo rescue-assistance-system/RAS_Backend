@@ -82,19 +82,15 @@ export class SocketService {
                     const userToCall = await SocketManager.getSocketId(message.toId)
 
                     if (userToCall) {
-                        socket.send(
-                            JSON.stringify({
-                                type: 'call_response',
-                                data: 'user is ready for call'
-                            })
-                        )
+                        socket.emit('call_response', {
+                            type: 'call_response',
+                            data: 'user is not online'
+                        })
                     } else {
-                        socket.send(
-                            JSON.stringify({
-                                type: 'call_response',
-                                data: 'user is not online'
-                            })
-                        )
+                        socket.emit('call_response', {
+                            type: 'call_response',
+                            data: 'user is not online'
+                        })
                     }
 
                     break
@@ -105,6 +101,7 @@ export class SocketService {
 
                     if (userToReceiveOffer && this.io) {
                         this.io.to(userToReceiveOffer).emit(
+                            'calling',
                             JSON.stringify({
                                 type: 'offer_received',
                                 name: message.name,
@@ -120,6 +117,7 @@ export class SocketService {
                     const userToReceiveAnswer = await SocketManager.getSocketId(message.toId)
                     if (userToReceiveAnswer && this.io) {
                         this.io.to(userToReceiveAnswer).emit(
+                            'calling',
                             JSON.stringify({
                                 type: 'answer_received',
                                 name: message.name,
@@ -135,6 +133,7 @@ export class SocketService {
                     const userToReceiveIceCandidate = await SocketManager.getSocketId(data.toId)
                     if (userToReceiveIceCandidate && this.io) {
                         this.io.to(userToReceiveIceCandidate).emit(
+                            'calling',
                             JSON.stringify({
                                 type: 'ice_candidate',
                                 name: message.name,
