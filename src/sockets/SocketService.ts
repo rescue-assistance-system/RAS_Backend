@@ -130,7 +130,7 @@ export class SocketService {
                 }
 
                 case 'ice_candidate': {
-                    const userToReceiveIceCandidate = await SocketManager.getSocketId(data.toId)
+                    const userToReceiveIceCandidate = await SocketManager.getSocketId(message.toId)
                     if (userToReceiveIceCandidate && this.io) {
                         this.io.to(userToReceiveIceCandidate).emit(
                             'calling',
