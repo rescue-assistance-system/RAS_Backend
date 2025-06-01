@@ -6,6 +6,7 @@ import { LocationResponseDto } from '~/dtos/location-response.dto'
 import { SosResponseDto } from '~/dtos/sos-request.dto'
 import { MessageDTO } from '~/dtos/messageDTO'
 import { CallingMessageDTO } from '~/dtos/calling-mesage.dto'
+import { NotificationService } from '~/services/notification.service'
 
 export class SocketService {
     private static instance: SocketService
@@ -43,7 +44,8 @@ export class SocketService {
             await this.handleDisconnect(socket)
         })
 
-        this.handleSignalingServer(socket)
+        this.handleVideoSignalingServer(socket)
+        this.handleAudioSignalingServer(socket)
     }
 
     private async handleRegister(socket: Socket, data: { userId: string }): Promise<void> {
@@ -57,6 +59,7 @@ export class SocketService {
                 status: 'success',
                 message: `Registered for user ${userId}`
             })
+            console.log(`Socket ${socket.id} registered for user ${userId}`)
         } catch (error) {
             console.error('Registration error:', error)
             socket.emit('error', { message: 'Registration failed' })
@@ -71,34 +74,31 @@ export class SocketService {
         console.log('Client disconnected:', socket.id)
     }
 
-    public async handleSignalingServer(socket: Socket): Promise<void> {
+    public async handleVideoSignalingServer(socket: Socket): Promise<void> {
         if (!this.io) throw new Error('Socket.IO server not initialized')
 
-        socket.on('calling', async (message: CallingMessageDTO) => {
+        socket.on('calling', async (rawMessage) => {
+            const message = typeof rawMessage === 'string' ? JSON.parse(rawMessage) : rawMessage
             console.log('Received calling message:', message)
-
+            console.log('Message type:', message.type)
             switch (message.type) {
                 case 'start_call': {
-                    const userToCall = await SocketManager.getSocketId(message.toId)
-
-                    if (userToCall) {
-                        socket.emit('call_response', {
-                            type: 'call_response',
-                            data: 'user is not online'
-                        })
-                    } else {
-                        socket.emit('call_response', {
-                            type: 'call_response',
-                            data: 'user is not online'
-                        })
+                    const messageReceived = {
+                        type: 'incoming_video_call',
+                        fromId: message.fromId,
+                        toId: message.toId,
+                        name: message.name,
+                        avatar: message.avatar,
+                        data: null,
+                        createdAt: new Date().toISOString()
                     }
+                    new NotificationService().sendCallNotification(messageReceived)
 
                     break
                 }
 
                 case 'create_offer': {
                     const userToReceiveOffer = await SocketManager.getSocketId(message.toId)
-
                     if (userToReceiveOffer && this.io) {
                         this.io.to(userToReceiveOffer).emit(
                             'calling',
@@ -106,7 +106,7 @@ export class SocketService {
                                 type: 'offer_received',
                                 name: message.name,
                                 fromId: message.fromId,
-                                data: message.data.sdp
+                                data: message.data
                             })
                         )
                     }
@@ -122,7 +122,7 @@ export class SocketService {
                                 type: 'answer_received',
                                 name: message.name,
                                 fromId: message.fromId,
-                                data: message.data.sdp
+                                data: message.data
                             })
                         )
                     }
@@ -138,11 +138,23 @@ export class SocketService {
                                 type: 'ice_candidate',
                                 name: message.name,
                                 fromId: message.fromId,
-                                data: {
-                                    sdpMLineIndex: message.data.sdpMLineIndex,
-                                    sdpMid: message.data.sdpMid,
-                                    sdpCandidate: message.data.sdpCandidate
-                                }
+                                data: message.data
+                            })
+                        )
+                    }
+                    break
+                }
+
+                case 'call_ended': {
+                    const userToNotify = await SocketManager.getSocketId(message.toId)
+                    if (userToNotify && this.io) {
+                        this.io.to(userToNotify).emit(
+                            'calling',
+                            JSON.stringify({
+                                type: 'call_ended_received',
+                                fromId: message.fromId,
+                                toId: message.toId,
+                                data: 'Call has ended'
                             })
                         )
                     }
@@ -150,6 +162,145 @@ export class SocketService {
                 }
             }
         })
+    }
+
+    public async handleAudioSignalingServer(socket: Socket): Promise<void> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+
+        socket.on('audio_calling', async (rawMessage) => {
+            const message = typeof rawMessage === 'string' ? JSON.parse(rawMessage) : rawMessage
+            console.log('Received audio calling message:', message)
+            console.log('Message type:', message.type)
+            switch (message.type) {
+                case 'start_call': {
+                    const messageReceived = {
+                        type: 'incoming_audio_call',
+                        fromId: message.fromId,
+                        toId: message.toId,
+                        name: message.name,
+                        avatar: message.avatar,
+                        data: null,
+                        createdAt: new Date().toISOString()
+                    }
+                    new NotificationService().sendCallNotification(messageReceived)
+
+                    break
+                }
+
+                case 'create_offer': {
+                    const userToReceiveOffer = await SocketManager.getSocketId(message.toId)
+                    if (userToReceiveOffer && this.io) {
+                        this.io.to(userToReceiveOffer).emit(
+                            'audio_calling',
+                            JSON.stringify({
+                                type: 'offer_received',
+                                name: message.name,
+                                fromId: message.fromId,
+                                data: message.data
+                            })
+                        )
+                    }
+                    break
+                }
+
+                case 'create_answer': {
+                    const userToReceiveAnswer = await SocketManager.getSocketId(message.toId)
+                    if (userToReceiveAnswer && this.io) {
+                        this.io.to(userToReceiveAnswer).emit(
+                            'audio_calling',
+                            JSON.stringify({
+                                type: 'answer_received',
+                                name: message.name,
+                                fromId: message.fromId,
+                                data: message.data
+                            })
+                        )
+                    }
+                    break
+                }
+
+                case 'ice_candidate': {
+                    const userToReceiveIceCandidate = await SocketManager.getSocketId(message.toId)
+                    if (userToReceiveIceCandidate && this.io) {
+                        this.io.to(userToReceiveIceCandidate).emit(
+                            'audio_calling',
+                            JSON.stringify({
+                                type: 'ice_candidate',
+                                name: message.name,
+                                fromId: message.fromId,
+                                data: message.data
+                            })
+                        )
+                    }
+                    break
+                }
+
+                case 'call_ended': {
+                    const userToNotify = await SocketManager.getSocketId(message.toId)
+                    if (userToNotify && this.io) {
+                        this.io.to(userToNotify).emit(
+                            'audio_calling',
+                            JSON.stringify({
+                                type: 'call_ended_received',
+                                fromId: message.fromId,
+                                toId: message.toId,
+                                data: 'Call has ended'
+                            })
+                        )
+                    }
+                    break
+                }
+            }
+        })
+    }
+
+    public async handleFriendCallRinging(fromId: string, toId: string, name: string, avatar: string): Promise<boolean> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        const socketId = await SocketManager.getSocketId(toId)
+        if (socketId) {
+            this.io.to(socketId).emit(
+                'calling',
+                JSON.stringify({
+                    type: 'ringing',
+                    fromId: fromId,
+                    toId: toId,
+                    name: name,
+                    avatar: avatar
+                })
+            )
+            console.log(`Ringing notification sent to user ${toId} ${fromId}`)
+            return true
+        } else {
+            console.log(`User ${toId} is offline, cannot send ringing notification`)
+            return false
+        }
+    }
+
+    public async handleFriendAudioCallRinging(
+        fromId: string,
+        toId: string,
+        name: string,
+        avatar: string
+    ): Promise<boolean> {
+        if (!this.io) throw new Error('Socket.IO server not initialized')
+        const socketId = await SocketManager.getSocketId(toId)
+        if (socketId) {
+            this.io.to(socketId).emit(
+                'audio_calling',
+                JSON.stringify({
+                    type: 'ringing',
+                    fromId: fromId,
+                    toId: toId,
+                    name: name,
+                    avatar: avatar
+                })
+            )
+            console.log(`Audio Call Ringing notification sent to user ${toId} ${fromId}`)
+            return true
+        } else {
+            console.log(`User ${toId} is offline, cannot send audio ringing notification`)
+            return false
+        }
     }
 
     public async handleAskLocation(data: LocationRequestDto): Promise<void> {

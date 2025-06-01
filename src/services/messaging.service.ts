@@ -106,7 +106,7 @@ export class MessagingService {
         const offset = (page - 1) * limit
         const messages = await sequelize.query(
             `
-            SELECT m.*, u.username AS sender_name, u.avatar AS avatar
+            SELECT m.*, u.username AS sender_name, u.avatar AS avatar, u.id AS sender_id
             FROM messages m
             INNER JOIN (
                 SELECT case_id, MAX(created_at) AS max_created_at
@@ -134,7 +134,7 @@ export class MessagingService {
             return null
         }
         const content = messages.map((message) => {
-            return convertToMessageDTO(message as Message)
+            return convertToMessageDTO(message)
         })
         return new ConversationPaging<MessageDTO>(content, totalItems, page, limit)
     }
@@ -183,7 +183,7 @@ export class MessagingService {
         // )
         const messages = await sequelize.query(
             `
-            SELECT m.*, u.username AS sender_name, u.avatar AS avatar
+            SELECT m.*, u.username AS sender_name, u.avatar AS avatar, u.id AS sender_id
             FROM messages m
             INNER JOIN (
                 SELECT case_id, MAX(created_at) AS max_created_at
@@ -212,7 +212,7 @@ export class MessagingService {
         }
 
         const content = messages.map((message) => {
-            return convertToMessageDTO(message as Message)
+            return convertToMessageDTO(message)
         })
         return new ConversationPaging<MessageDTO>(content, totalItems, page, limit)
     }

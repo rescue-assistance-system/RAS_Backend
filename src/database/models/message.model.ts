@@ -34,7 +34,7 @@ Message.init(
             allowNull: false
         },
         content_type: {
-            type: DataTypes.ENUM('TEXT', 'IMAGE', 'VOICE', 'CALL'),
+            type: DataTypes.ENUM('TEXT', 'IMAGE', 'VOICE', 'CALL', 'VIDEO_CALL'),
             allowNull: false
         },
         sender_name: {

@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { TrackingController } from '../controllers/tracking.controller'
 import { authenticateToken } from '../middleware/auth.middleware'
-import express, { Request, Response } from 'express'
 
 const router = Router()
 const trackingController = new TrackingController()

@@ -13,6 +13,7 @@ import locationRoutes from './location.routes.swagger'
 import sosRoutes from './sos.routes.swagger'
 import messageingRoutes from './messaging.routes.swagger'
 import sosCoordinatorRoutes from './sos_coordinator.routes.swagger'
+import callRouter from './calling.routes.swagger'
 import cloudinaryRoutes from './cloudinary.routes.swagger'
 
 const router = Router()
@@ -22,6 +23,7 @@ router.use('/admin', adminRoutes)
 // router.use('/coordinator', coordinatorRoutes);
 router.use('/rescue-team', rescueTeamRoutes)
 router.use('/tracking', trackingRoutes)
+router.use('/call', callRouter)
 router.use('/location', locationRoutes)
 router.use('/sos', sosRoutes)
 router.use('/sos-coordinator', sosCoordinatorRoutes)
