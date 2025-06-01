@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 import { firebaseAdmin } from '~/configs/firebase.config'
 import User from '~/database/models/user.model'
+import { CallingMessageDTO } from '~/dtos/calling-mesage.dto'
 import { LocationRequestDto } from '~/dtos/location-request.dto'
 import { MessageDTO } from '~/dtos/messageDTO'
 import { SosMessageDto } from '~/dtos/sos-message.dto'
@@ -16,6 +17,29 @@ export class NotificationService {
             const message = {
                 token,
                 data: stringifiedData
+            }
+
+            try {
+                const response = await firebaseAdmin.messaging().send(message)
+                console.log('Successfully sent message to', token, ':', response)
+            } catch (error) {
+                console.error('Error sending message to', token, ':', error)
+            }
+        }
+    }
+
+    async sendUrgentNotification(userIds: string[], data: object) {
+        const fcmTokens = await this.getFCMTokens(userIds)
+        console.log('FCM token:', fcmTokens)
+
+        const stringifiedData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
+        for (const token of fcmTokens) {
+            const message = {
+                token,
+                data: stringifiedData,
+                android: {
+                    priority: 'high'
+                }
             }
 
             try {
@@ -56,6 +80,10 @@ export class NotificationService {
         }
 
         await this.sendNotification(toIds, dataToSend)
+    }
+
+    async sendCallNotification(message: CallingMessageDTO): Promise<void> {
+        await this.sendNotification([message.toId], message)
     }
 
     async getFCMTokens(userIds: string[]): Promise<string[]> {

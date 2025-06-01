@@ -38,7 +38,7 @@ router.use(authenticateToken)
  *                 example: "This is the message content"
  *               content_type:
  *                 type: string
- *                 enum: [TEXT, IMAGE, VOICE, CALL]
+ *                 enum: [TEXT, IMAGE, VOICE, CALL, VIDEO_CALL]
  *                 example: TEXT
  *               caseId:
  *                 type: string
