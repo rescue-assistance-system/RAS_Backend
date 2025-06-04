@@ -108,7 +108,7 @@ export class TrackingController {
             const userId = req.user?.user_id
 
             if (!userId) {
-                return res.status(400).json(createResponse('error', null, 'User ID is required')) 
+                return res.status(400).json(createResponse('error', null, 'User ID is required'))
             }
 
             const result = await this.trackingService.getYourFollowing(userId)

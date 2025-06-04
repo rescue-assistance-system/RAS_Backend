@@ -185,6 +185,9 @@ export class SosService {
                 : [sosRequest.id]
             await caseToUse.update({ sos_list: updatedSosList })
 
+            const user = await User.findOne({ where: { id: userId } })
+            const username = user?.username
+            const avatar = user?.avatar
             //send SOS signal to RCs
             // const teamIds = availableTeams.map((team) => team.user_id)
             const notification = {
@@ -193,6 +196,8 @@ export class SosService {
                     message: `SOS request received for location (${latitude}, ${longitude}).`,
                     latitude,
                     longitude,
+                    userName: username,
+                    avatar: avatar,
                     address,
                     caseId: caseToUse.id,
                     userId: userIdNum
@@ -213,6 +218,8 @@ export class SosService {
                     sosMesage: new SosMessageDto({
                         message: `SOS request received for location (${latitude}, ${longitude}).`,
                         userId: Number(userId),
+                        userName: username,
+                        avatar: avatar,
                         latitude,
                         longitude,
                         address,
@@ -242,29 +249,63 @@ export class SosService {
 
     public async markSafe(caseId: number): Promise<void> {
         try {
-            const caseToUpdate = await this.validateCaseStatus(caseId, CaseStatus.PENDING)
+            const caseToUpdate = await this.validateCaseStatus(caseId, [
+                CaseStatus.PENDING,
+                CaseStatus.ACCEPTED,
+                CaseStatus.READY
+            ])
 
             await caseToUpdate.update({ status: CaseStatus.SAFE, cancelled_at: new Date() })
-            console.log(`Case ${caseId} marked as cancelled.`)
+            console.log(`Case ${caseId} marked as safe.`)
+            // Update the status of the accepted team to available
+            const acceptedTeamId = caseToUpdate.accepted_team_id
+            if (acceptedTeamId) {
+                await RescueTeam.update({ status: 'available' }, { where: { user_id: acceptedTeamId } })
+            }
+            // Get accountn rc username and avatar
+            const userId = caseToUpdate.from_id
+            const user = await User.findOne({ where: { id: userId } })
+            const username = user?.username
+            const avatar = user?.avatar
 
             // Notify all teams in the SOS list
             const allNearestTeamIds = await this.getNearestTeamIds(caseToUpdate.sos_list || [])
             const notification = {
                 type: NotificationType.CASE_SAFE,
                 sosMesage: new SosMessageDto({
-                    message: `Case ${caseId} has been marked as cancelled. The user is safe.`,
-                    caseId: caseId
+                    message: `Case ${caseId} has been marked as safe. The user is safe.`,
+                    caseId: caseId,
+                    userName: username,
+                    avatar: avatar
                 })
             }
 
             await this.sendNotificationToUser(Array.from(allNearestTeamIds), notification)
+
+            // Notify all trackers of the user
+            const trackingService = new TrackingService()
+            const trackers = await trackingService.getTrackers(userId)
+            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (activeTrackers.length > 0) {
+                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+                const trackingNotification = {
+                    type: NotificationType.CASE_SAFE,
+                    sosMesage: new SosMessageDto({
+                        message: `Your friend ${username}'s case ${caseId} has been marked as safe.`,
+                        caseId: caseId,
+                        userName: username,
+                        avatar: avatar
+                    })
+                }
+                await this.sendNotificationToUser(trackerIds, trackingNotification)
+            }
         } catch (error: any) {
             console.error('Error marking case as safe:', error)
             throw new Error(`Failed to mark case as safe: ${error.message}`)
         }
     }
 
-    public async acceptCase(teamId: number, caseId: number): Promise<void> {
+    public async acceptCase(teamId: number, caseId: number, latitude?: number, longitude?: number): Promise<void> {
         try {
             const caseToUpdate = await this.validateCaseStatus(caseId, CaseStatus.PENDING)
             await caseToUpdate.update({
@@ -287,16 +328,27 @@ export class SosService {
             // Get accountn rc username
             const user = await User.findOne({
                 where: { id: teamId },
-                attributes: ['username']
+                attributes: ['username', 'avatar']
             })
+
+            let lat = latitude
+            let lng = longitude
+            if (lat === undefined || lng === undefined) {
+                const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+                lat = rescueTeam?.latitude ?? rescueTeam?.default_latitude
+                lng = rescueTeam?.longitude ?? rescueTeam?.default_longitude
+            }
 
             const notification = {
                 type: NotificationType.CASE_ACCEPTED,
                 sosMesage: new SosMessageDto({
-                    message: `Case ${caseId} has been accepted by rescue team (${teamId}).`,
+                    message: `Case ${caseId} has been accepted by rescue team (${user?.username}).`,
                     caseId: caseId,
                     teamId: teamId,
-                    userName: user?.username
+                    userName: user?.username,
+                    avatar: user?.avatar,
+                    latitude: lat,
+                    longitude: lng
                 })
             }
 
@@ -308,7 +360,7 @@ export class SosService {
         }
     }
 
-    public async rejectCase(teamId: number, caseId: number): Promise<void> {
+    public async rejectCase(teamId: number, caseId: number, latitude?: number, longitude?: number): Promise<void> {
         try {
             const caseToUpdate = await this.validateCaseStatus(caseId, CaseStatus.PENDING)
 
@@ -330,12 +382,22 @@ export class SosService {
             // Notify the user
             const userId = caseToUpdate.from_id
 
+            let lat = latitude
+            let lng = longitude
+            if (lat === undefined || lng === undefined) {
+                const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+                lat = rescueTeam?.latitude ?? rescueTeam?.default_latitude
+                lng = rescueTeam?.longitude ?? rescueTeam?.default_longitude
+            }
+
             const notification = {
                 type: NotificationType.CASE_REJECTED,
                 sosMesage: new SosMessageDto({
                     message: `Case ${caseId} has been rejected by team ${teamId}.`,
                     caseId: caseId,
-                    teamId: teamId
+                    teamId: teamId,
+                    latitude: lat,
+                    longitude: lng
                 })
             }
 
@@ -352,7 +414,13 @@ export class SosService {
         }
     }
 
-    public async changeStatus(teamId: number, caseId: number, newStatus: CaseStatus): Promise<void> {
+    public async changeStatus(
+        teamId: number,
+        caseId: number,
+        newStatus: CaseStatus,
+        latitude?: number,
+        longitude?: number
+    ): Promise<void> {
         try {
             const caseToUpdate = await CasesReport.findOne({
                 where: { id: caseId }
@@ -414,13 +482,23 @@ export class SosService {
             console.log(`Case ${caseId} status updated to ${newStatus} by team ${teamId}.`)
 
             const userId = caseToUpdate.dataValues.from_id
+            let lat = latitude
+            let lng = longitude
+            if (lat === undefined || lng === undefined) {
+                const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+                lat = rescueTeam?.latitude ?? rescueTeam?.default_latitude
+                lng = rescueTeam?.longitude ?? rescueTeam?.default_longitude
+            }
+
             const notification = {
                 type: NotificationType.CASE_STATUS_UPDATED,
                 sosMesage: new SosMessageDto({
                     message: `The status of your case ${caseId} has been updated to ${newStatus} by the rescue team.`,
                     caseId: caseId,
                     teamId: teamId,
-                    status: newStatus
+                    status: newStatus,
+                    latitude: lat,
+                    longitude: lng
                 })
             }
 
@@ -431,7 +509,13 @@ export class SosService {
         }
     }
 
-    public async cancelCaseByRescueTeam(teamId: number, caseId: number, reason: string): Promise<void> {
+    public async cancelCaseByRescueTeam(
+        teamId: number,
+        caseId: number,
+        reason: string,
+        latitude?: number,
+        longitude?: number
+    ): Promise<void> {
         try {
             const caseToUpdate = await this.validateCaseStatus(caseId, [CaseStatus.ACCEPTED, CaseStatus.READY])
 
@@ -450,6 +534,13 @@ export class SosService {
                 where: { id: teamId },
                 attributes: ['username']
             })
+            let lat = latitude
+            let lng = longitude
+            if (lat === undefined || lng === undefined) {
+                const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+                lat = rescueTeam?.latitude ?? rescueTeam?.default_latitude
+                lng = rescueTeam?.longitude ?? rescueTeam?.default_longitude
+            }
 
             const notification = {
                 type: NotificationType.CASE_CANCELLED,
@@ -457,7 +548,10 @@ export class SosService {
                     message: `Your case ${caseId} has been marked as cancelled. Reason: ${reason}`,
                     caseId: caseId,
                     teamId: teamId,
-                    userName: user?.username
+                    userName: user?.username,
+                    latitude: lat,
+                    longitude: lng,
+                    cancelledReason: reason
                 })
             }
 
@@ -468,7 +562,13 @@ export class SosService {
         }
     }
 
-    public async completedCase(teamId: number, caseId: number, description: string): Promise<void> {
+    public async completedCase(
+        teamId: number,
+        caseId: number,
+        description: string,
+        latitude?: number,
+        longitude?: number
+    ): Promise<void> {
         try {
             const caseToUpdate = await this.validateCaseStatus(caseId, CaseStatus.READY)
 
@@ -481,18 +581,52 @@ export class SosService {
             console.log(`Case ${caseId} has been marked as completed by team ${teamId}. Description: ${description}`)
 
             await RescueTeam.update({ status: 'available' }, { where: { user_id: teamId } })
-
             const userId = caseToUpdate.from_id
+            let lat = latitude
+            let lng = longitude
+            if (lat === undefined || lng === undefined) {
+                const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+                lat = rescueTeam?.latitude ?? rescueTeam?.default_latitude
+                lng = rescueTeam?.longitude ?? rescueTeam?.default_longitude
+            }
+
+            const user = await User.findOne({ where: { id: userId } })
+            const username = user?.username
+            const avatar = user?.avatar
+            const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+            const teamname = rescueTeam?.team_name || 'Unknown Team'
             const notification = {
                 type: NotificationType.CASE_COMPLETED,
                 sosMesage: new SosMessageDto({
-                    message: `Your case ${caseId} has been marked as completed by the rescue team (${teamId}). Description: ${description}`,
+                    message: `Your case ${caseId} has been marked as completed by the rescue team (${teamname}). Description: ${description}`,
                     caseId: caseId,
-                    teamId: teamId
+                    teamId: teamId,
+                    latitude: lat,
+                    longitude: lng,
+                    userName: username,
+                    avatar: avatar
                 })
             }
-
             await this.sendNotificationToUser([userId], notification)
+            //send SOS signal to trackers
+            const trackingService = new TrackingService()
+            const trackers = await trackingService.getTrackers(parseInt(userId))
+            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (activeTrackers.length > 0) {
+                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+                const trackingNotification = {
+                    type: NotificationType.SOS_REQUEST,
+                    sosMesage: new SosMessageDto({
+                        message: `Your friend ${username}'s case ${caseId} has been marked as completed by the rescue team (${teamname}). Description: ${description}`,
+                        userId: Number(userId),
+                        userName: username,
+                        latitude: lat,
+                        longitude: lng,
+                        avatar: avatar
+                    })
+                }
+                await this.sendNotificationToUser(trackerIds, trackingNotification)
+            }
         } catch (error: any) {
             console.error('Error marking case as completed:', error)
             throw new Error(`Failed to mark case as completed: ${error.message}`)
