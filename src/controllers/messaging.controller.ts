@@ -19,7 +19,14 @@ export class MessagingController {
                 return res.status(400).json({ message: 'Missing required fields' })
             }
 
-            const messageDTO = await this.messagingService.sendMessage(user_id, content, content_type, caseId, role, duration)
+            const messageDTO = await this.messagingService.sendMessage(
+                user_id,
+                content,
+                content_type,
+                caseId,
+                role,
+                duration
+            )
             return res.status(200).json(createResponse('success', messageDTO))
         } catch (error) {
             console.error('Error sending message:', error)

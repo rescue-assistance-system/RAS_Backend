@@ -55,14 +55,14 @@ export class SosController {
     public async acceptCase(req: Request, res: Response) {
         try {
             const teamId = req.user?.user_id
-            const { caseId } = req.body
+            const { caseId, latitude, longitude } = req.body
             if (!teamId || !caseId) {
                 return res
                     .status(400)
                     .json(createResponse('error', null, 'Team ID and Case ID are required in Access Token'))
             }
 
-            await this.sosService.acceptCase(teamId, caseId)
+            await this.sosService.acceptCase(teamId, caseId, latitude, longitude)
             res.status(200).json(createResponse('success', null, 'SOS request accepted successfully'))
         } catch (error: any) {
             console.error('Error accepting SOS request:', error)
@@ -73,14 +73,14 @@ export class SosController {
     public async rejectCase(req: Request, res: Response) {
         try {
             const teamId = req.user?.user_id
-            const { caseId } = req.body
+            const { caseId, latitude, longitude } = req.body
             if (!teamId || !caseId) {
                 return res
                     .status(400)
                     .json(createResponse('error', null, 'Team ID and Case ID are required in Access Token'))
             }
 
-            await this.sosService.rejectCase(teamId, caseId)
+            await this.sosService.rejectCase(teamId, caseId, latitude, longitude)
             res.status(200).json(createResponse('success', null, 'SOS request rejected successfully'))
         } catch (error: any) {
             console.error('Error rejecting SOS request:', error)
@@ -91,21 +91,17 @@ export class SosController {
     public async changeStatus(req: Request, res: Response): Promise<void> {
         try {
             const teamId = req.user?.user_id
-            console.log('Team ID:', teamId)
-            const { caseId, newStatus } = req.body
-            console.log('Request body:', req.body)
+            const { caseId, newStatus, latitude, longitude } = req.body // Lấy thêm lat/long
 
             if (!Object.values(CaseStatus).includes(newStatus)) {
                 return res.status(400).json(createResponse('error', null, 'Invalid status value.'))
             }
 
-            await this.sosService.changeStatus(teamId, caseId, newStatus)
+            await this.sosService.changeStatus(teamId, caseId, newStatus, latitude, longitude) // Truyền lat/long vào
 
             res.status(200).json(createResponse('success', null, `Case ${caseId} status updated to ${newStatus}.`))
         } catch (error: any) {
             console.error('Error in changeStatus endpoint:', error)
-
-            // Trả về phản hồi lỗi
             res.status(500).json(createResponse('error', null, error.message || 'Failed to update case status.'))
         }
     }
@@ -113,14 +109,14 @@ export class SosController {
     public async cancelCaseByRescueTeam(req: Request, res: Response) {
         try {
             const teamId = req.user?.user_id
-            const { caseId, reason } = req.body
+            const { caseId, reason, latitude, longitude } = req.body
             if (!teamId || !caseId) {
                 return res
                     .status(400)
                     .json(createResponse('error', null, 'Team ID and Case ID are required in Access Token'))
             }
 
-            await this.sosService.cancelCaseByRescueTeam(teamId, caseId, reason)
+            await this.sosService.cancelCaseByRescueTeam(teamId, caseId, reason, latitude, longitude)
             res.status(200).json(createResponse('success', null, 'SOS request cancelled successfully'))
         } catch (error: any) {
             console.error('Error cancelling SOS request:', error)
@@ -131,14 +127,14 @@ export class SosController {
     public async completedCase(req: Request, res: Response) {
         try {
             const teamId = req.user?.user_id
-            const { caseId, description } = req.body
+            const { caseId, description, latitude, longitude } = req.body
             if (!teamId || !caseId) {
                 return res
                     .status(400)
                     .json(createResponse('error', null, 'Team ID and Case ID are required in Access Token'))
             }
 
-            await this.sosService.completedCase(teamId, caseId, description)
+            await this.sosService.completedCase(teamId, caseId, description, latitude, longitude)
             res.status(200).json(createResponse('success', null, 'SOS request completed successfully'))
         } catch (error: any) {
             console.error('Error completing SOS request:', error)

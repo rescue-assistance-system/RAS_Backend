@@ -49,7 +49,7 @@ Message.init(
             type: DataTypes.INTEGER,
             allowNull: true,
             defaultValue: null
-        },
+        }
     },
     {
         sequelize,

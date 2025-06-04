@@ -15,6 +15,7 @@ import messageingRoutes from './messaging.routes.swagger'
 import sosCoordinatorRoutes from './sos_coordinator.routes.swagger'
 import callRouter from './calling.routes.swagger'
 import cloudinaryRoutes from './cloudinary.routes.swagger'
+import analyticsRoutes from './analytics.routes'
 
 const router = Router()
 
@@ -34,6 +35,7 @@ router.use('/news', newsRoutes)
 router.use('/first-aid-categories', firstAidCategoryRoutes)
 router.use('/first-aid-guides', firstAidGuideRoutes)
 router.use('/cloudinary', cloudinaryRoutes)
+router.use('/analytics', analyticsRoutes)
 
 router.get('/health', (req, res) => {
     res.status(200).json({
