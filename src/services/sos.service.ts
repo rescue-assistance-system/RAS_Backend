@@ -186,6 +186,13 @@ export class SosService {
             await caseToUse.update({ sos_list: updatedSosList })
 
             const user = await User.findOne({ where: { id: userId } })
+            // update user latitude and longitude
+            if (user) {
+                await user.update({
+                    latitude: latitude,
+                    longitude: longitude
+                })
+            }
             const username = user?.username
             const avatar = user?.avatar
             //send SOS signal to RCs
@@ -267,6 +274,7 @@ export class SosService {
             const user = await User.findOne({ where: { id: userId } })
             const username = user?.username
             const avatar = user?.avatar
+            // const userId = user?.id
 
             // Notify all teams in the SOS list
             const allNearestTeamIds = await this.getNearestTeamIds(caseToUpdate.sos_list || [])
@@ -276,7 +284,8 @@ export class SosService {
                     message: `Case ${caseId} has been marked as safe. The user is safe.`,
                     caseId: caseId,
                     userName: username,
-                    avatar: avatar
+                    avatar: avatar,
+                    userId: userId
                 })
             }
 
@@ -294,7 +303,8 @@ export class SosService {
                         message: `Your friend ${username}'s case ${caseId} has been marked as safe.`,
                         caseId: caseId,
                         userName: username,
-                        avatar: avatar
+                        avatar: avatar,
+                        userId: userId
                     })
                 }
                 await this.sendNotificationToUser(trackerIds, trackingNotification)
