@@ -214,6 +214,28 @@ export class SosService {
             await this.sendNotificationToUser(teamIds, notification)
             notifiedTeamIds.push(...teamIds.map((id) => id.toString()))
 
+            //get coordinator information
+            const coordinators = await User.findAll({ where: { role: 'coordinator' }, attributes: ['id'] })
+            console.log(`Coordinators: ${JSON.stringify(coordinators)}`)
+            const coordinatorIds = coordinators.map((c) => c.id)
+            console.log(`Coordinator IDs: ${coordinatorIds}`)
+
+            // Send notification to the coordinators
+            const coordinatorNotification = {
+                type: NotificationType.SOS_REQUEST,
+                sosMesage: new SosMessageDto({
+                    message: `A new SOS request has been created by ${username}.`,
+                    latitude,
+                    longitude,
+                    userName: username,
+                    avatar: avatar,
+                    address,
+                    nearest_team_ids: teamIds,
+                    caseId: caseToUse.id,
+                    userId: userIdNum
+                })
+            }
+            await new SosService().sendNotificationToUser(coordinatorIds, coordinatorNotification)
             //send SOS signal to trackers
             const trackingService = new TrackingService()
             const trackers = await trackingService.getTrackers(parseInt(userId))
@@ -540,10 +562,12 @@ export class SosService {
             const userId = caseToUpdate.from_id
 
             // Get accountn rc username
-            const user = await User.findOne({
-                where: { id: teamId },
-                attributes: ['username']
-            })
+
+            const rescueTeam = await RescueTeam.findOne({ where: { user_id: teamId } })
+            const teamname = rescueTeam?.team_name || 'Unknown Team'
+            const user = await User.findOne({ where: { id: userId } })
+            const username = user?.username
+            const avatar = user?.avatar
             let lat = latitude
             let lng = longitude
             if (lat === undefined || lng === undefined) {
@@ -558,7 +582,7 @@ export class SosService {
                     message: `Your case ${caseId} has been marked as cancelled. Reason: ${reason}`,
                     caseId: caseId,
                     teamId: teamId,
-                    userName: user?.username,
+                    userName: username,
                     latitude: lat,
                     longitude: lng,
                     cancelledReason: reason
@@ -566,6 +590,26 @@ export class SosService {
             }
 
             await this.sendNotificationToUser([userId], notification)
+
+            //send SOS signal to trackers
+            const trackingService = new TrackingService()
+            const trackers = await trackingService.getTrackers(parseInt(userId))
+            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (activeTrackers.length > 0) {
+                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+                const trackingNotification = {
+                    type: NotificationType.CASE_CANCELLED,
+                    sosMesage: new SosMessageDto({
+                        message: `Your friend ${username}'s case ${caseId} has been marked as cancelled by the rescue team (${teamname}). Reason: ${reason}`,
+                        userId: Number(userId),
+                        userName: username,
+                        latitude: lat,
+                        longitude: lng,
+                        avatar: avatar
+                    })
+                }
+                await this.sendNotificationToUser(trackerIds, trackingNotification)
+            }
         } catch (error: any) {
             console.error('Error cancelling case:', error)
             throw new Error(`Failed to cancel case: ${error.message}`)
