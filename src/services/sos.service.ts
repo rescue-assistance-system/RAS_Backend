@@ -214,6 +214,28 @@ export class SosService {
             await this.sendNotificationToUser(teamIds, notification)
             notifiedTeamIds.push(...teamIds.map((id) => id.toString()))
 
+            //get coordinator information
+            const coordinators = await User.findAll({ where: { role: 'coordinator' }, attributes: ['id'] })
+            console.log(`Coordinators: ${JSON.stringify(coordinators)}`)
+            const coordinatorIds = coordinators.map((c) => c.id)
+            console.log(`Coordinator IDs: ${coordinatorIds}`)
+
+            // Send notification to the coordinators
+            const coordinatorNotification = {
+                type: NotificationType.SOS_REQUEST,
+                sosMesage: new SosMessageDto({
+                    message: `A new SOS request has been created by ${username}.`,
+                    latitude,
+                    longitude,
+                    userName: username,
+                    avatar: avatar,
+                    address,
+                    nearest_team_ids: teamIds,
+                    caseId: caseToUse.id,
+                    userId: userIdNum
+                })
+            }
+            await new SosService().sendNotificationToUser(coordinatorIds, coordinatorNotification)
             //send SOS signal to trackers
             const trackingService = new TrackingService()
             const trackers = await trackingService.getTrackers(parseInt(userId))

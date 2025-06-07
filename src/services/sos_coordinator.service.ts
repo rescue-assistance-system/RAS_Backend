@@ -139,6 +139,8 @@ export class CoordinatorSosService {
             const rescueTeamUser = await User.findOne({ where: { id: teamId } })
             const teamUserName = rescueTeamUser?.username
             const teamAvatar = rescueTeamUser?.avatar
+
+           
             // Send notification to the rescue team
             const notification = {
                 type: NotificationType.CASE_ASSIGNED,
@@ -166,6 +168,7 @@ export class CoordinatorSosService {
             }
             await new SosService().sendNotificationToUser([userId], userNotification)
 
+        
             //send notification to the trackers
             // const trackingService = new TrackingService()
             // const trackers = await trackingService.getTrackers(userId)
