@@ -40,7 +40,7 @@ export class MessagingService {
         }
 
         const messageDTO = convertToMessageDTO(messageWithSender)
-
+        console.log('Message DTO:', messageDTO)
         if (fromRole === Role.RESCUE_TEAM) {
             const userIds = await this.getAllUserAndOtherTeamInCase(caseId, fromId)
             console.log('List user receive message: ', userIds)
