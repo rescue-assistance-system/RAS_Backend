@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize'
 import sequelize from '../connection'
+import User from './user.model'
 
 class Message extends Model {
     public id!: number
@@ -9,7 +10,6 @@ class Message extends Model {
     public content_type!: string
     public sender_name?: string
     public case_id!: number
-    public avatar?: string
     public duration?: number
 }
 
@@ -59,5 +59,7 @@ Message.init(
         underscored: true
     }
 )
+
+Message.belongsTo(User, { foreignKey: 'from_id', targetKey: 'id', as: 'sender' });
 
 export default Message

@@ -109,4 +109,38 @@ export class MessagingController {
             return handleApiError(res, error, 'Error getting list conversations:')
         }
     }
+
+    public async getConvoInfoByUser(req, res) {
+        try {
+            const { caseId } = req.params
+            const { user_id } = req.user
+
+            if (!user_id || !caseId) {
+                return res.status(400).json({ message: 'Missing required fields' })
+            }
+
+            const convoInfo = await this.messagingService.getConvoInforByUser(Number(caseId))
+            return res.status(200).json(createResponse('success', convoInfo))
+        } catch (error) {
+            console.error('Error getting conversation info:', error)
+            return handleApiError(res, error, 'Error getting conversation info:')
+        }
+    }
+
+    public async getConvoInfoByRescueTeam(req, res) {
+        try {
+            const { caseId } = req.params
+            const { user_id } = req.user
+
+            if (!user_id || !caseId) {
+                return res.status(400).json({ message: 'Missing required fields' })
+            }
+
+            const convoInfo = await this.messagingService.getConvoInforByRescueTeam(Number(caseId))
+            return res.status(200).json(createResponse('success', convoInfo))
+        } catch (error) {
+            console.error('Error getting conversation info:', error)
+            return handleApiError(res, error, 'Error getting conversation info:')
+        }
+    }
 }

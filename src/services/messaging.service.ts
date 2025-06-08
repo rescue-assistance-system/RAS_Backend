@@ -1,7 +1,7 @@
 import { sequelize, User } from '~/database'
 import CasesReport from '~/database/models/case_report.model'
 import Message from '~/database/models/message.model'
-import { convertToDTO as convertToMessageDTO, MessageDTO } from '~/dtos/messageDTO'
+import { convertToDTO as convertToMessageDTO, MessageDTO, MessageInfoDTO } from '~/dtos/messageDTO'
 import { SocketService } from '~/sockets/SocketService'
 import { NotificationService } from './notification.service'
 import SosRequest from '~/database/models/sos.model'
@@ -18,18 +18,28 @@ export class MessagingService {
         fromRole: string,
         duration: number
     ): Promise<MessageDTO> {
-        const senderName = await this.getSenderName(fromId)
+        const senderInfo = await this.getSenderInfo(fromId)
         const message = await Message.create({
             from_id: fromId,
             content,
             content_type,
             case_id: caseId,
-            sender_name: senderName,
+            sender_name: senderInfo?.username || null,
+            sender_avatar: senderInfo?.avatar || null,
             created_at: new Date(),
             duration: duration ?? null
         })
 
-        const messageDTO = convertToMessageDTO(message.dataValues)
+        const messageWithSender = {
+            ...message.dataValues,
+            sender: {
+                id: senderInfo?.id,
+                username: senderInfo?.username,
+                avatar: senderInfo?.avatar
+            }
+        }
+
+        const messageDTO = convertToMessageDTO(messageWithSender)
 
         if (fromRole === Role.RESCUE_TEAM) {
             const userIds = await this.getAllUserAndOtherTeamInCase(caseId, fromId)
@@ -51,6 +61,71 @@ export class MessagingService {
         return messageDTO
     }
 
+    async getConvoInforByUser(caseId: number): Promise<MessageInfoDTO> {
+        const result = await sequelize.query(
+            `
+            SELECT 
+                c.id AS caseid,
+                u.username AS username, 
+                u.avatar AS avatar, 
+                u.id AS userid
+            FROM cases_report c
+            LEFT JOIN accounts_ras_sys u ON c.accepted_team_id = u.id
+            WHERE c.id = :caseId
+            `,
+            {
+                replacements: { caseId },
+                type: QueryTypes.SELECT
+            }
+        )
+        console.log('Result:', result)
+
+        const raw = result[0]
+
+        if (!raw) {
+            throw new Error(`No case found for id ${caseId}`)
+        }
+
+        return new MessageInfoDTO({
+            caseId: raw.caseid,
+            userId: raw.userid,
+            avatar: raw.avatar,
+            userName: raw.username
+        })
+    }
+
+    async getConvoInforByRescueTeam(caseId: number): Promise<MessageInfoDTO> {
+        const result = await sequelize.query(
+            `
+            SELECT 
+                c.id AS caseid,
+                u.username AS username, 
+                u.avatar AS avatar, 
+                u.id AS userid
+            FROM cases_report c
+            LEFT JOIN accounts_ras_sys u ON c.from_id = u.id
+            WHERE c.id = :caseId
+            `,
+            {
+                replacements: { caseId },
+                type: QueryTypes.SELECT
+            }
+        )
+
+        const raw = result[0]
+
+        if (!raw) {
+            throw new Error(`No case found for id ${caseId}`)
+        }
+
+        return new MessageInfoDTO({
+            caseId: raw.caseid,
+            userId: raw.userid,
+            avatar: raw.avatar,
+            userName: raw.username
+        })
+    }
+
     async getConversation(
         userId: number,
         role: string,
@@ -68,7 +143,14 @@ export class MessagingService {
             where: { case_id: caseId },
             limit: limit,
             offset: offset,
-            order: [['created_at', 'DESC']]
+            order: [['created_at', 'DESC']],
+            include: [
+                {
+                    model: User,
+                    as: 'sender',
+                    attributes: ['avatar', 'username', 'id']
+                }
+            ]
         })
         if (!messages || messages.length === 0) {
             return null
@@ -116,7 +198,7 @@ export class MessagingService {
             ) latest
             ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
             INNER JOIN cases_report c ON m.case_id = c.id
-            INNER JOIN accounts_ras_sys u ON c.accepted_team_id = u.id
+            LEFT JOIN accounts_ras_sys u ON c.accepted_team_id = u.id
             ORDER BY m.created_at DESC
             LIMIT :limit OFFSET :offset
             `,
@@ -157,30 +239,7 @@ export class MessagingService {
 
         const caseIds = cases.map((caseReport) => caseReport.dataValues.id)
         const totalItems = caseIds.length
-        // const messages = await sequelize.query(
-        //     `
-        //     SELECT m.*
-        //     FROM messages m
-        //     INNER JOIN (
-        //         SELECT case_id, MAX(created_at) AS max_created_at
-        //         FROM messages
-        //         WHERE case_id IN (:caseIds)
-        //         GROUP BY case_id
-        //     ) latest
-        //     ON m.case_id = latest.case_id AND m.created_at = latest.max_created_at
-        //     ORDER BY m.created_at DESC
-        //     LIMIT :limit OFFSET :offset
-        //     `,
-        //     {
-        //         replacements: {
-        //             caseIds,
-        //             limit,
-        //             offset
-        //         },
-        //         model: Message,
-        //         mapToModel: true
-        //     }
-        // )
+
         const messages = await sequelize.query(
             `
             SELECT m.*, u.username AS sender_name, u.avatar AS avatar, u.id AS sender_id
@@ -235,8 +294,23 @@ export class MessagingService {
     }
 
     async getSenderName(fromId: number): Promise<string | null> {
-        const user = await User.findOne({ attributes: ['username'], where: { id: fromId } })
+        const user = await User.findOne({ attributes: ['username', 'avatar'], where: { id: fromId } })
         return user ? user.dataValues.username : null
+    }
+
+    async getSenderInfo(fromId: number): Promise<{ id: number; avatar: string | null; username: string } | null> {
+        const user = await User.findOne({
+            attributes: ['id', 'username', 'avatar'],
+            where: { id: fromId }
+        })
+
+        if (!user) return null
+
+        return {
+            id: user.id,
+            username: user.username,
+            avatar: user.avatar
+        }
     }
 
     // Function to check if the user is online and send the message via Socket.IO or FCM

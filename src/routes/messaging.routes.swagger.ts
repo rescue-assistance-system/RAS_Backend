@@ -337,4 +337,7 @@ router.get('/rescue-conversations', messagingController.getListConversationsByRe
 
 router.get('/conversation', messagingController.getConversation.bind(messagingController))
 
+router.get('/conversation-user/info/:caseId', messagingController.getConvoInfoByUser.bind(messagingController))
+router.get('/conversation-rescue/info/:caseId', messagingController.getConvoInfoByRescueTeam.bind(messagingController))
+
 export default router
