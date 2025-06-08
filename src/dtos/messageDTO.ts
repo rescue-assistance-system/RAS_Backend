@@ -21,9 +21,9 @@ export function convertToDTO(message: any): MessageDTO {
         content: message.content,
         content_type: message.content_type,
         senderId: message.sender_id,
-        senderName: message.sender?.username || null,
+        senderName: message.sender?.username || message.sender_name || null,
         createdAt: message.created_at,
-        avatar: message.sender?.avatar || null,
+        avatar: message.sender?.avatar || message.avatar || null,
         duration: message.duration
     }
 }
