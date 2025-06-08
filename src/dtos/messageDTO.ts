@@ -21,9 +21,23 @@ export function convertToDTO(message: any): MessageDTO {
         content: message.content,
         content_type: message.content_type,
         senderId: message.sender_id,
-        senderName: message.sender_name,
+        senderName: message.sender?.username || null,
         createdAt: message.created_at,
-        avatar: message.avatar,
+        avatar: message.sender?.avatar || null,
         duration: message.duration
+    }
+}
+
+export class MessageInfoDTO {
+    caseId: number = 0
+    userId: number = 0
+    avatar?: string = undefined
+    userName?: string = undefined
+
+    constructor(message: MessageInfoDTO) {
+        this.caseId = message.caseId
+        this.userId = message.userId
+        this.avatar = message.avatar
+        this.userName = message.userName
     }
 }
