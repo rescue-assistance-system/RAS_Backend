@@ -43,7 +43,6 @@ export class SosService {
                 )
                 return distance <= radius
             })
-
             return nearbyTeams
         } catch (error: any) {
             console.error('Error finding available teams:', error)
@@ -118,7 +117,6 @@ export class SosService {
             }
 
             if (availableTeams.length === 0) {
-                console.log('No teams found within 30km. Sending to all rescue teams.')
                 availableTeams = await RescueTeam.findAll({
                     where: { status: 'available' }
                 })
@@ -151,7 +149,6 @@ export class SosService {
                     CaseStatus.SAFE,
                     CaseStatus.EXPIRED
                 ].includes(latestCase.dataValues.status)
-                console.log('Latest case status:', latestCase.dataValues.status)
 
                 // Check if the latest case is open and within the time limit
                 if (isCaseOpen) {
@@ -216,9 +213,7 @@ export class SosService {
 
             //get coordinator information
             const coordinators = await User.findAll({ where: { role: 'coordinator' }, attributes: ['id'] })
-            console.log(`Coordinators: ${JSON.stringify(coordinators)}`)
             const coordinatorIds = coordinators.map((c) => c.id)
-            console.log(`Coordinator IDs: ${coordinatorIds}`)
 
             // Send notification to the coordinators
             const coordinatorNotification = {
@@ -239,9 +234,9 @@ export class SosService {
             //send SOS signal to trackers
             const trackingService = new TrackingService()
             const trackers = await trackingService.getTrackers(parseInt(userId))
-            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
-            if (activeTrackers.length > 0) {
-                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+            // const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (trackers.length > 0) {
+                const trackerIds = trackers.map((tracker) => tracker.user_id)
                 const trackingNotification = {
                     type: NotificationType.SOS_REQUEST,
                     sosMesage: new SosMessageDto({
@@ -316,9 +311,9 @@ export class SosService {
             // Notify all trackers of the user
             const trackingService = new TrackingService()
             const trackers = await trackingService.getTrackers(userId)
-            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
-            if (activeTrackers.length > 0) {
-                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+            // const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (trackers.length > 0) {
+                const trackerIds = trackers.map((tracker) => tracker.user_id)
                 const trackingNotification = {
                     type: NotificationType.CASE_SAFE,
                     sosMesage: new SosMessageDto({
@@ -594,9 +589,9 @@ export class SosService {
             //send SOS signal to trackers
             const trackingService = new TrackingService()
             const trackers = await trackingService.getTrackers(parseInt(userId))
-            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
-            if (activeTrackers.length > 0) {
-                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+            // const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (trackers.length > 0) {
+                const trackerIds = trackers.map((tracker) => tracker.user_id)
                 const trackingNotification = {
                     type: NotificationType.CASE_CANCELLED,
                     sosMesage: new SosMessageDto({
@@ -665,9 +660,9 @@ export class SosService {
             //send SOS signal to trackers
             const trackingService = new TrackingService()
             const trackers = await trackingService.getTrackers(parseInt(userId))
-            const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
-            if (activeTrackers.length > 0) {
-                const trackerIds = activeTrackers.map((tracker) => tracker.user_id)
+            // const activeTrackers = trackers.filter((tracker) => tracker.tracking_status === true)
+            if (trackers.length > 0) {
+                const trackerIds = trackers.map((tracker) => tracker.user_id)
                 const trackingNotification = {
                     type: NotificationType.SOS_REQUEST,
                     sosMesage: new SosMessageDto({
