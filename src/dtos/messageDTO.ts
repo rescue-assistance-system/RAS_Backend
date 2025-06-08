@@ -20,7 +20,7 @@ export function convertToDTO(message: any): MessageDTO {
         fromId: message.from_id,
         content: message.content,
         content_type: message.content_type,
-        senderId: message.sender_id,
+        senderId: message.sender_id || null,
         senderName: message.sender?.username || message.sender_name || null,
         createdAt: message.created_at,
         avatar: message.sender?.avatar || message.avatar || null,
