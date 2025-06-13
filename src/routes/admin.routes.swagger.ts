@@ -11,13 +11,21 @@ router.get('/coordinators/:id', authorize(['admin']), adminController.getCoordin
 router.put('/coordinators/:id', authorize(['admin']), adminController.updateCoordinator)
 router.delete('/coordinators/:id', authorize(['admin']), adminController.deleteCoordinator)
 
-router.get('/rescue-teams/paginated', authorize(['admin']), adminController.getPaginatedRescueTeams)
-router.get('/rescue-teams', authorize(['admin']), adminController.getRescueTeams)
-router.get('/rescue-teams/:id', authorize(['admin']), adminController.getRescueTeamById)
-router.get('/rescue-teams/:id/profile', authorize(['admin']), adminController.getRescueTeamProfileById)
-router.post('/rescue-teams', authorize(['admin']), adminController.createRescueTeam)
-router.put('/rescue-teams/:id', authorize(['admin']), adminController.updateRescueTeam)
-router.delete('/rescue-teams/:id', authorize(['admin']), adminController.deleteRescueTeam)
+// router.get('/rescue-teams/paginated', authorize(['admin']), adminController.getPaginatedRescueTeams)
+// router.get('/rescue-teams', authorize(['admin']), adminController.getRescueTeams)
+// router.get('/rescue-teams/:id', authorize(['admin']), adminController.getRescueTeamById)
+// router.get('/rescue-teams/:id/profile', authorize(['admin']), adminController.getRescueTeamProfileById)
+// router.post('/rescue-teams', authorize(['admin']), adminController.createRescueTeam)
+// router.put('/rescue-teams/:id', authorize(['admin']), adminController.updateRescueTeam)
+// router.delete('/rescue-teams/:id', authorize(['admin']), adminController.deleteRescueTeam)
+
+router.get('/rescue-teams/paginated', adminController.getPaginatedRescueTeams)
+router.get('/rescue-teams', adminController.getRescueTeams)
+router.get('/rescue-teams/:id', adminController.getRescueTeamById)
+router.get('/rescue-teams/:id/profile', adminController.getRescueTeamProfileById)
+router.post('/rescue-teams', adminController.createRescueTeam)
+router.put('/rescue-teams/:id', adminController.updateRescueTeam)
+router.delete('/rescue-teams/:id', adminController.deleteRescueTeam)
 
 // router.post('/news', authorize('admin'), adminController.createNews);
 // router.get('/news', authorize('admin'), adminController.getNews);
