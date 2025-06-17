@@ -8,7 +8,7 @@ import { authenticateToken, authorize } from '~/middleware/auth.middleware'
 // const router = Router()
 // const controller = new SosCoordinatorController()
 
-router.use(authenticateToken)
+// router.use(authenticateToken)
 /**
  * @swagger
  * /rescue-team/profile:
@@ -139,13 +139,13 @@ router.put('/profile', rescueTeamController.updateProfile)
  *       401:
  *         description: Unauthorized
  */
-router.put('/profile/team-info', rescueTeamController.updateTeamInfo)
+router.put('/profile/team-info', authenticateToken, rescueTeamController.updateTeamInfo)
 
-router.put('/profile/members', rescueTeamController.updateTeamMembers)
+router.put('/profile/members', authenticateToken, rescueTeamController.updateTeamMembers)
 
-router.put('/profile/default-location', rescueTeamController.updateDefaultLocation)
+router.put('/profile/default-location', authenticateToken, rescueTeamController.updateDefaultLocation)
 
-router.put('/profile/current-location', rescueTeamController.updateCurrentLocation)
+router.put('/profile/current-location', authenticateToken, rescueTeamController.updateCurrentLocation)
 
 router.get('/profile/location-history', rescueTeamController.getLocationHistory)
 
