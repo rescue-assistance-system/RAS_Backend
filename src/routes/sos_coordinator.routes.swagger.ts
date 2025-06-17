@@ -5,7 +5,7 @@ import { authenticateToken, authorize } from '~/middleware/auth.middleware'
 const router = Router()
 const controller = new SosCoordinatorController()
 
-router.use(authenticateToken)
+// router.use(authenticateToken)
 
 /**
  * @swagger
@@ -26,8 +26,8 @@ router.use(authenticateToken)
  *       500:
  *         description: Internal server error
  */
-router.get('/sos', authorize('coordinator'), controller.getAllSosRequestsForCoordinator.bind(controller))
-
+router.get('/sos', controller.getAllSosRequestsForCoordinator.bind(controller))
+//authorize('coordinator'),
 /**
  * @swagger
  * /coordinator/sos/{sosId}:
@@ -54,8 +54,8 @@ router.get('/sos', authorize('coordinator'), controller.getAllSosRequestsForCoor
  *       500:
  *         description: Internal server error
  */
-router.get('/sos/:sosId', authorize('coordinator'), controller.getSosRequestById.bind(controller))
-
+router.get('/sos/:sosId', controller.getSosRequestById.bind(controller))
+//authorize('coordinator'),
 /**
  * @swagger
  * /coordinator/rescue-teams/available:
@@ -92,8 +92,8 @@ router.get('/sos/:sosId', authorize('coordinator'), controller.getSosRequestById
  *       500:
  *         description: Internal server error
  */
-router.get('/rescue-teams/available', authorize('coordinator'), controller.getAvailableRescueTeams.bind(controller))
-
+router.get('/rescue-teams/available', controller.getAvailableRescueTeams.bind(controller))
+//authorize('coordinator'),
 /**
  * @swagger
  * /coordinator/statistics:
@@ -118,7 +118,7 @@ router.get('/rescue-teams/available', authorize('coordinator'), controller.getAv
  *       500:
  *         description: Internal server error
  */
-router.get('/statistics', authorize('coordinator'), controller.getSosStatistics.bind(controller))
+router.get('/statistics', authenticateToken, authorize('coordinator'), controller.getSosStatistics.bind(controller))
 
 /**
  * @swagger
@@ -151,7 +151,7 @@ router.get('/statistics', authorize('coordinator'), controller.getSosStatistics.
  *       500:
  *         description: Internal server error
  */
-router.post('/assign-team', authorize('coordinator'), controller.assignTeamToCase.bind(controller))
+router.post('/assign-team', authenticateToken, authorize('coordinator'), controller.assignTeamToCase.bind(controller))
 
 /**
  * @swagger
@@ -181,7 +181,12 @@ router.post('/assign-team', authorize('coordinator'), controller.assignTeamToCas
  *       500:
  *         description: Internal server error
  */
-router.post('/notify-rescue-team', authorize('coordinator'), controller.notifyRescueTeamOfCase.bind(controller))
+router.post(
+    '/notify-rescue-team',
+    authenticateToken,
+    authorize('coordinator'),
+    controller.notifyRescueTeamOfCase.bind(controller)
+)
 
 /**
  * @swagger
@@ -219,6 +224,6 @@ router.post('/notify-rescue-team', authorize('coordinator'), controller.notifyRe
  *       500:
  *         description: Internal server error
  */
-router.get('/rescue-teams/locations', authorize('coordinator'), controller.getRescueTeamLocations.bind(controller))
-
+router.get('/rescue-teams/locations', controller.getRescueTeamLocations.bind(controller))
+// authorize('coordinator'),
 export default router
