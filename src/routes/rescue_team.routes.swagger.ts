@@ -51,7 +51,7 @@ import { authenticateToken, authorize } from '~/middleware/auth.middleware'
  *       401:
  *         description: Unauthorized
  */
-router.post('/profile', rescueTeamController.createProfile)
+router.post('/profile',authenticateToken,  rescueTeamController.createProfile)
 
 /**
  * @swagger
@@ -68,7 +68,7 @@ router.post('/profile', rescueTeamController.createProfile)
  *       404:
  *         description: Profile not found
  */
-router.get('/profile', rescueTeamController.getProfile)
+router.get('/profile', authenticateToken, rescueTeamController.getProfile)
 
 /**
  * @swagger
@@ -111,7 +111,7 @@ router.get('/profile', rescueTeamController.getProfile)
  *       401:
  *         description: Unauthorized
  */
-router.put('/profile', rescueTeamController.updateProfile)
+router.put('/profile', authenticateToken, rescueTeamController.updateProfile)
 
 /**
  * @swagger
@@ -147,9 +147,9 @@ router.put('/profile/default-location', authenticateToken, rescueTeamController.
 
 router.put('/profile/current-location', authenticateToken, rescueTeamController.updateCurrentLocation)
 
-router.get('/profile/location-history', rescueTeamController.getLocationHistory)
+router.get('/profile/location-history', authenticateToken, rescueTeamController.getLocationHistory)
 
-router.get('/profile/full-info', rescueTeamController.getFullTeamInfo)
+router.get('/profile/full-info', authenticateToken, rescueTeamController.getFullTeamInfo)
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ router.get('/profile/full-info', rescueTeamController.getFullTeamInfo)
  *       500:
  *         description: Internal server error
  */
-router.get('/members', rescueTeamController.getRescueTeamMembers)
+router.get('/members', authenticateToken, rescueTeamController.getRescueTeamMembers)
 
 /**
  * @swagger
@@ -271,7 +271,11 @@ router.get('/members', rescueTeamController.getRescueTeamMembers)
  *       500:
  *         description: Lỗi server.
  */
-router.get('/history/list-case', rescueTeamController.getAllSosRequestsForTeam.bind(rescueTeamController))
+router.get(
+    '/history/list-case',
+    authenticateToken,
+    rescueTeamController.getAllSosRequestsForTeam.bind(rescueTeamController)
+)
 
 /**
  * @swagger
@@ -363,7 +367,11 @@ router.get('/history/list-case', rescueTeamController.getAllSosRequestsForTeam.b
  *       500:
  *         description: Internal server error
  */
-router.get('/history/case/:caseId', rescueTeamController.getHistoryCaseDetails.bind(rescueTeamController))
+router.get(
+    '/history/case/:caseId',
+    authenticateToken,
+    rescueTeamController.getHistoryCaseDetails.bind(rescueTeamController)
+)
 
 router.get('/allRescueTeams', rescueTeamController.getAllRescueTeams.bind(rescueTeamController))
 export default router

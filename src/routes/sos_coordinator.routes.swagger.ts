@@ -54,7 +54,7 @@ router.get('/sos', controller.getAllSosRequestsForCoordinator.bind(controller))
  *       500:
  *         description: Internal server error
  */
-router.get('/sos/:sosId', controller.getSosRequestById.bind(controller))
+router.get('/sos/:sosId', authenticateToken, controller.getSosRequestById.bind(controller))
 //authorize('coordinator'),
 /**
  * @swagger
