@@ -207,4 +207,18 @@ export class AuthController {
             res.status(500).json(createResponse('error', null, 'Internal server error'))
         }
     }
+
+    public updateProfile = async (req: Request, res: Response) => {
+        try {
+            const userId = req.user?.user_id
+            if (!userId) {
+                return res.status(400).json(createResponse('error', null, 'User ID is required'))
+            }
+            const updatedUser = await this.authService.updateProfile(userId, req.body)
+            res.status(200).json(createResponse('success', updatedUser))
+        } catch (error: any) {
+            console.error('Error in updateProfile:', error.message)
+            res.status(500).json(createResponse('error', null, 'Internal server error'))
+        }
+    }
 }

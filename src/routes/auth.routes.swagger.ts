@@ -736,4 +736,7 @@ router.get('/debug-redis', authController.debugRedis)
 router.get('/admin-only', authorize('admin'), (req, res) => {
     res.json({ message: 'Welcome, admin!' })
 })
+
+router.put('/update-profile', authenticateToken, authController.updateProfile)
+
 export default router
