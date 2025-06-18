@@ -10,6 +10,7 @@ import { NotificationType } from '~/enums/notification-types.enum'
 import { TrackingService } from './tracking.service'
 import { Op } from 'sequelize'
 import { SosMessageDto } from '~/dtos/sos-message.dto'
+import dayjs from 'dayjs'
 export class SosService {
     // calculate distance between two coordinates using Haversine formula
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -759,6 +760,38 @@ export class SosService {
             throw new Error(`Failed to fetch SOS requests for team: ${error.message}`)
         }
     }
+    // ✅ Helper method để tìm timestamp mới nhất
+    private calculateLatestTimestamp(caseDetails: any): string {
+        const timestamps: dayjs.Dayjs[] = []
+
+        // Collect all timestamps from case
+        const caseData = caseDetails.case
+        const caseFields = ['created_at', 'accepted_at', 'ready_at', 'completed_at', 'cancelled_at']
+
+        caseFields.forEach((field) => {
+            if (caseData[field]) {
+                timestamps.push(dayjs(caseData[field]))
+            }
+        })
+
+        // Collect timestamps from all SOS requests
+        if (caseDetails.sosRequests && Array.isArray(caseDetails.sosRequests)) {
+            caseDetails.sosRequests.forEach((sos: any) => {
+                if (sos.created_at) timestamps.push(dayjs(sos.created_at))
+                if (sos.updated_at) timestamps.push(dayjs(sos.updated_at))
+            })
+        }
+
+        // Find the latest timestamp
+        if (timestamps.length === 0) {
+            console.warn('No timestamps found, using current time')
+            return dayjs().tz('Asia/Ho_Chi_Minh').format()
+        }
+
+        // Sort and get the latest
+        const latest = timestamps.sort((a, b) => b.valueOf() - a.valueOf())[0]
+        return latest.tz('Asia/Ho_Chi_Minh').format()
+    }
 
     public async getCaseDetailsById(caseId: string, teamId?: number): Promise<SosResponseDto | null> {
         try {
@@ -788,6 +821,8 @@ export class SosService {
             }
             // console.log('Case details:', caseDetails.data.case.created_at)
 
+            const updatedAt = this.calculateLatestTimestamp(caseDetails)
+            caseDetails.case.dataValues.updated_at = updatedAt
             return caseDetails
         } catch (error: any) {
             console.error('Error fetching case details:', error)
