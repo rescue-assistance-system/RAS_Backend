@@ -338,4 +338,35 @@ export class AuthService {
             throw new Error('Error updating FCM token')
         }
     }
+
+    public async updateProfile(
+        userId: number,
+        profileData: { username?: string; email?: string; phone?: string; avatar?: string; birthday?: Date }
+    ) {
+        try {
+            console.log('Updating profile for userId:', userId, 'with data:', profileData)
+            const user = await User.findByPk(userId)
+            console.log('user', user)
+            if (!user) {
+                throw new Error('User not found')
+            }
+
+            // Update only provided fields
+            await user.update(profileData)
+
+            return {
+                message: 'Profile updated successfully',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    phone: user.phone,
+                    avatar: user.avatar,
+                    birthday: user.birthday
+                }
+            }
+        } catch (error) {
+            throw new Error('Error updating profile')
+        }
+    }
 }
