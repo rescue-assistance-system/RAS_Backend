@@ -1,7 +1,7 @@
-import { Sequelize, DataTypes, Model } from 'sequelize'
+import { Sequelize, DataTypes } from 'sequelize'
 import sequelize from '../connection.js'
-
-class FirstAidCategory extends Model {}
+import { BaseModel } from './base.model'
+class FirstAidCategory extends BaseModel {}
 
 FirstAidCategory.init(
     {

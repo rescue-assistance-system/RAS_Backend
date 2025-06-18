@@ -1,8 +1,9 @@
-import { Model, DataTypes } from 'sequelize'
+import { DataTypes } from 'sequelize'
 import sequelize from '../connection'
 import User from './user.model'
+import { BaseModel } from './base.model'
 
-class Message extends Model {
+class Message extends BaseModel {
     public id!: number
     public from_id!: number
     public created_at!: Date

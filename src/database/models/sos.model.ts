@@ -1,18 +1,16 @@
-import { Model, DataTypes } from 'sequelize'
+import { DataTypes } from 'sequelize'
 import sequelize from '../connection'
 import CasesReport from './case_report.model'
 import User from './user.model'
+import { BaseModel } from './base.model'
+import dayjs from 'dayjs'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 
-class SosRequest extends Model {
-    // public id!: number
-    // public user_id!: number
-    // public latitude!: number | null
-    // public longitude!: number | null
-    // public created_at!: Date
-    // public updated_at!: Date
-    // public nearest_team_ids!: number[] | null
-    // public case_id!: number | null
-}
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+class SosRequest extends BaseModel {}
 
 SosRequest.init(
     {
@@ -35,13 +33,21 @@ SosRequest.init(
         },
         created_at: {
             type: DataTypes.DATE,
-            allowNull: true,
-            defaultValue: DataTypes.NOW
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+            get() {
+                const rawValue = this.getDataValue('created_at')
+                return rawValue ? dayjs(rawValue).tz('Asia/Ho_Chi_Minh').format() : null
+            }
         },
         updated_at: {
             type: DataTypes.DATE,
-            allowNull: true,
-            defaultValue: DataTypes.NOW
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+            get() {
+                const rawValue = this.getDataValue('updated_at')
+                return rawValue ? dayjs(rawValue).tz('Asia/Ho_Chi_Minh').format() : null
+            }
         },
         nearest_team_ids: {
             type: DataTypes.ARRAY(DataTypes.INTEGER),
@@ -57,7 +63,12 @@ SosRequest.init(
         modelName: 'SosRequest',
         tableName: 'sos_requests',
         timestamps: false,
-        underscored: true
+        underscored: true,
+        hooks: {
+            beforeUpdate: (instance) => {
+                instance.updated_at = new Date()
+            }
+        }
     }
 )
 
