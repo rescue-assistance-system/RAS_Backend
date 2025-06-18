@@ -601,7 +601,8 @@ export class SosService {
                         userName: username,
                         latitude: lat,
                         longitude: lng,
-                        avatar: avatar
+                        avatar: avatar,
+                        cancelledReason: reason
                     })
                 }
                 await this.sendNotificationToUser(trackerIds, trackingNotification)
@@ -655,7 +656,8 @@ export class SosService {
                     latitude: lat,
                     longitude: lng,
                     userName: username,
-                    avatar: avatar
+                    avatar: avatar,
+                    completed_description: description
                 })
             }
             await this.sendNotificationToUser([userId], notification)
@@ -673,7 +675,8 @@ export class SosService {
                         userName: username,
                         latitude: lat,
                         longitude: lng,
-                        avatar: avatar
+                        avatar: avatar,
+                        completed_description: description
                     })
                 }
                 await this.sendNotificationToUser(trackerIds, trackingNotification)
