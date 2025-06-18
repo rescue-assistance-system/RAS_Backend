@@ -1,7 +1,8 @@
-import { Sequelize, DataTypes, Model } from 'sequelize'
+import { Sequelize, DataTypes } from 'sequelize'
 import sequelize from '../connection.js'
+import { BaseModel } from './base.model.js'
 
-class NewsCategory extends Model {}
+class NewsCategory extends BaseModel {}
 
 NewsCategory.init(
     {

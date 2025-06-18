@@ -15,6 +15,7 @@ import routes from './routes/index'
 import cors from 'cors'
 import './jobs'
 import { setupSocketIO } from './sockets'
+process.env.TZ = 'Asia/Ho_Chi_Minh'
 
 const app: Express = express()
 

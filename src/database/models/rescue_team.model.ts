@@ -1,8 +1,9 @@
-import { Model, DataTypes } from 'sequelize'
+import { DataTypes } from 'sequelize'
 import sequelize from '../connection'
 import User from './user.model'
+import { BaseModel } from './base.model'
 
-class RescueTeam extends Model {}
+class RescueTeam extends BaseModel {}
 
 RescueTeam.init(
     {

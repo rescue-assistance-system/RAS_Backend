@@ -6,6 +6,11 @@ const sequelize = new Sequelize(dbConfig.database, dbConfig.user, dbConfig.passw
     port: dbConfig.port,
     dialect: 'postgres',
     logging: false,
+    timezone: '+07:00',
+    dialectOptions: {
+        useUTC: false, // ✅ Thêm dòng này
+        timezone: '+07:00' // ✅ Thêm dòng này
+    },
     define: {
         timestamps: true,
         underscored: true

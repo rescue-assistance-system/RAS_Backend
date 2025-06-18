@@ -1,8 +1,9 @@
-import { Model, DataTypes } from 'sequelize'
+import { DataTypes } from 'sequelize'
 import sequelize from '../connection'
 import User from './user.model'
+import { BaseModel } from './base.model'
 
-class Tracking extends Model {
+class Tracking extends BaseModel {
     // public id!: number
     // public tracker_user_id!: number
     // public target_user_id!: number

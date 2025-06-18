@@ -786,6 +786,8 @@ export class SosService {
                     }))
                 }
             }
+            // console.log('Case details:', caseDetails.data.case.created_at)
+
             return caseDetails
         } catch (error: any) {
             console.error('Error fetching case details:', error)

@@ -59,7 +59,7 @@ async function processCase(caseItem: any): Promise<void> {
         })
 
         if (lastSos && lastSos.created_at) {
-            const createdAt = dayjs(lastSos.created_at).add(7, 'hour')
+            const createdAt = dayjs(lastSos.created_at)
             const currentTime = dayjs().tz('Asia/Ho_Chi_Minh')
             const timeDiffMinutes = currentTime.diff(createdAt, 'minute')
             const timeDiffHours = currentTime.diff(createdAt, 'hour')
