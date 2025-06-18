@@ -726,8 +726,16 @@ export class SosService {
                 },
                 {
                     model: CasesReport,
-                    as: 'case',
-                    attributes: ['id', 'status', 'created_at', 'accepted_team_id', 'cancelled_reason']
+                    as: 'case'
+                    // attributes: [
+                    //     'id',
+                    //     'status',
+                    //     'created_at',
+                    //     'accepted_team_id',
+                    //     'cancelled_reason',
+                    //     'completed_description',
+                    //     'assigned_by'
+                    // ]
                 }
             ],
             order: [['created_at', 'DESC']]
