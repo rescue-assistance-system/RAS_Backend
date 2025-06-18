@@ -117,7 +117,10 @@ export class AuthService {
                 access_token: generateAccessToken({
                     user_id: user.dataValues.id,
                     device_id: user.dataValues.device_id,
-                    role: user.dataValues.role
+                    role: user.dataValues.role,
+                    phone: user.dataValues.phone,
+                    latitude: user.dataValues.latitude,
+                    longitude: user.dataValues.longitude
                 }),
                 refresh_token: generateRefreshToken({
                     user_id: user.id,
